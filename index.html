@@ -405,7 +405,7 @@
 
     <div class="field">
       <label>علت / توضیح</label>
-      <textarea id="incReason" placeholder="ارور فناوران ، توضیحات مربوط به قطعی..."></textarea>
+      <textarea id="incReason" placeholder="مثلاً: قطع ارتباط با سرور فناوران از ساعت..."></textarea>
     </div>
 
     <div class="warn-box" id="incWarnBox" style="display:none;"></div>
@@ -449,10 +449,21 @@ const CONFIG = {
    لاگ توی گوگل‌شیت - آدرس Web App اسکریپت گوگل‌اَپس رو اینجا بذار
    (راهنمای ساخت و دیپلوی این اسکریپت رو جدا برات نوشتم)
 ========================================================== */
-const SHEET_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbw0z0yOt7id0OyNLxiboCqVz6tZlOHktman26jshzAefTQdLqmPurlzIFFaG0Gc8vZM/exec';
+const SHEET_WEBHOOK_URL = 'YOUR-APPS-SCRIPT-WEB-APP-URL';
 
 function isSheetConfigured() {
   return SHEET_WEBHOOK_URL && SHEET_WEBHOOK_URL.indexOf('YOUR-') === -1;
+}
+
+// یه UUID واقعی می‌سازه (برای ستون‌هایی مثل batch_id که ممکنه نوعشون uuid باشه)
+function genUUID() {
+  if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  // fallback برای مرورگرهای قدیمی‌تر
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
 }
 
 // سال/ماه/روز شمسی رو به‌صورت رشته‌ی عددی (نه فارسی) برمی‌گردونه، هماهنگ با ستون‌های شیت
@@ -474,11 +485,11 @@ function logToSheet(payload) {
 
 /* عناوین ثابت قطعی - به همون ترتیبی که خواسته شده */
 const OUTAGE_TYPES = [
-  { key: 'sandogh',        label: 'مشکل صندوق',            nationwide: false, dynamicPortal: false },
+  { key: 'sandogh',        label: 'صندوق قطع',            nationwide: false, dynamicPortal: false },
   { key: 'sabt_ahval',     label: 'ثبت احوال',             nationwide: false, dynamicPortal: false },
   { key: 'amlak',          label: 'املاک و اسکان',         nationwide: true,  dynamicPortal: false },
   { key: 'bimeh_markazi',  label: 'استعلام بیمه مرکزی',    nationwide: true,  dynamicPortal: false },
-  { key: 'fanavaran_portal', label: 'مشکل فناوران / پرتال',   nationwide: false, dynamicPortal: true },
+  { key: 'fanavaran_portal', label: 'فناوران/پرتال قطع',   nationwide: false, dynamicPortal: true },
   { key: 'vpn',            label: 'مشکل وی‌پی‌ان',         nationwide: false, dynamicPortal: false },
   { key: 'chap',           label: 'مشکل چاپ',              nationwide: false, dynamicPortal: false },
   { key: 'mali',           label: 'ارسال به مالی',         nationwide: false, dynamicPortal: false }
@@ -979,7 +990,7 @@ async function submitIncident(force) {
   }
 
   const openedBy = session && session.user ? session.user.email : 'نامشخص';
-  const batchId = isNationwide ? ('batch-' + Date.now()) : null;
+  const batchId = isNationwide ? genUUID() : null;
   const openedAt = buildOpenedAt(document.getElementById('incTime').value);
 
   const submitBtn = document.getElementById('incSubmitBtn');
@@ -987,6 +998,7 @@ async function submitIncident(force) {
   const warnBox = document.getElementById('incWarnBox');
 
   try {
+    let firstCreatedId = null;
     for (const c of targetCompanies) {
       if (!c) continue;
       const created = await createIncidentRow({
@@ -1000,11 +1012,27 @@ async function submitIncident(force) {
         opened_by: openedBy,
         status: 'open'
       });
+      if (firstCreatedId === null) firstCreatedId = created.id;
+      // برای قطعی سراسری فقط یک بار توی شیت ثبت می‌شه (نه برای هر شرکت جدا)
+      if (!isNationwide) {
+        logToSheet({
+          action: 'open',
+          id: created.id,
+          company: c.name,
+          tag: typeLabelForCompany(typeObj, c),
+          reason: reason || '',
+          line: (INSURANCE_LINES.find(l => l.key === lineKey) || {}).label || '',
+          time: document.getElementById('incTime').value || nowTimeHHMM(),
+          ...faDateParts(openedAt)
+        });
+      }
+    }
+    if (isNationwide && firstCreatedId !== null) {
       logToSheet({
         action: 'open',
-        id: created.id,
-        company: c.name,
-        tag: typeLabelForCompany(typeObj, c),
+        id: firstCreatedId,
+        company: 'تمام شرکت‌ها',
+        tag: typeLabelForCompany(typeObj, targetCompanies.find(c => c) || {}),
         reason: reason || '',
         line: (INSURANCE_LINES.find(l => l.key === lineKey) || {}).label || '',
         time: document.getElementById('incTime').value || nowTimeHHMM(),

@@ -329,7 +329,9 @@
 </div>
 
 <main>
-  
+  <div id="configBanner" class="config-banner" style="display:none;">
+    ⚠️ تنظیمات Supabase انجام نشده؛ الان داده‌های نمایشی (غیرواقعی و غیرماندگار) نشون داده می‌شه. آدرس URL و anon key رو در ابتدای کد (بخش CONFIG) وارد کن.
+  </div>
 
   <div id="nationwideBanners"></div>
 
@@ -439,15 +441,15 @@
    (از Project Settings > API توی پنل Supabase)
 ========================================================== */
 const CONFIG = {
-  url: 'https://YOUR-PROJECT.supabase.co',
-  anonKey: 'YOUR-ANON-KEY'
+  url: 'https://hbiygeecakpgjnfieyyt.supabase.co',
+  anonKey: 'sb_publishable__MGWCrgYYtyMFFQ9NjK5XQ_Ps-emOHk'
 };
 
 /* ==========================================================
    لاگ توی گوگل‌شیت - آدرس Web App اسکریپت گوگل‌اَپس رو اینجا بذار
    (راهنمای ساخت و دیپلوی این اسکریپت رو جدا برات نوشتم)
 ========================================================== */
-const SHEET_WEBHOOK_URL = 'YOUR-APPS-SCRIPT-WEB-APP-URL';
+const SHEET_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbw0z0yOt7id0OyNLxiboCqVz6tZlOHktman26jshzAefTQdLqmPurlzIFFaG0Gc8vZM/exec';
 
 function isSheetConfigured() {
   return SHEET_WEBHOOK_URL && SHEET_WEBHOOK_URL.indexOf('YOUR-') === -1;

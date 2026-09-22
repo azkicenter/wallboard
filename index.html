@@ -449,7 +449,7 @@ const CONFIG = {
    لاگ توی گوگل‌شیت - آدرس Web App اسکریپت گوگل‌اَپس رو اینجا بذار
    (راهنمای ساخت و دیپلوی این اسکریپت رو جدا برات نوشتم)
 ========================================================== */
-const SHEET_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbw0z0yOt7id0OyNLxiboCqVz6tZlOHktman26jshzAefTQdLqmPurlzIFFaG0Gc8vZM/exec';
+const SHEET_WEBHOOK_URL = 'YOUR-APPS-SCRIPT-WEB-APP-URL';
 
 function isSheetConfigured() {
   return SHEET_WEBHOOK_URL && SHEET_WEBHOOK_URL.indexOf('YOUR-') === -1;
@@ -982,32 +982,45 @@ async function submitIncident(force) {
   const batchId = isNationwide ? ('batch-' + Date.now()) : null;
   const openedAt = buildOpenedAt(document.getElementById('incTime').value);
 
-  for (const c of targetCompanies) {
-    if (!c) continue;
-    const created = await createIncidentRow({
-      company_id: c.id,
-      title: typeLabelForCompany(typeObj, c),
-      line: lineKey,
-      is_nationwide: isNationwide,
-      batch_id: batchId,
-      reason: reason || null,
-      opened_at: openedAt.toISOString(),
-      opened_by: openedBy,
-      status: 'open'
-    });
-    logToSheet({
-      action: 'open',
-      id: created.id,
-      company: c.name,
-      tag: typeLabelForCompany(typeObj, c),
-      reason: reason || '',
-      line: (INSURANCE_LINES.find(l => l.key === lineKey) || {}).label || '',
-      time: document.getElementById('incTime').value || nowTimeHHMM(),
-      ...faDateParts(openedAt)
-    });
+  const submitBtn = document.getElementById('incSubmitBtn');
+  submitBtn.disabled = true;
+  const warnBox = document.getElementById('incWarnBox');
+
+  try {
+    for (const c of targetCompanies) {
+      if (!c) continue;
+      const created = await createIncidentRow({
+        company_id: c.id,
+        title: typeLabelForCompany(typeObj, c),
+        line: lineKey,
+        is_nationwide: isNationwide,
+        batch_id: batchId,
+        reason: reason || null,
+        opened_at: openedAt.toISOString(),
+        opened_by: openedBy,
+        status: 'open'
+      });
+      logToSheet({
+        action: 'open',
+        id: created.id,
+        company: c.name,
+        tag: typeLabelForCompany(typeObj, c),
+        reason: reason || '',
+        line: (INSURANCE_LINES.find(l => l.key === lineKey) || {}).label || '',
+        time: document.getElementById('incTime').value || nowTimeHHMM(),
+        ...faDateParts(openedAt)
+      });
+    }
+    closeModal('incidentModal');
+    await refreshAll();
+  } catch (err) {
+    console.error('خطا در ثبت قطعی:', err);
+    warnBox.style.display = 'block';
+    warnBox.textContent = '❌ ثبت قطعی با خطا مواجه شد: ' +
+      (err && (err.message || err.details || err.hint) || JSON.stringify(err));
+  } finally {
+    submitBtn.disabled = false;
   }
-  closeModal('incidentModal');
-  await refreshAll();
 }
 
 async function resolveIncident(id) {

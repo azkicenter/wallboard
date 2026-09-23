@@ -228,17 +228,17 @@
   .tile-status { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; width: 100%; min-height: 0; overflow-y: auto; flex-shrink: 0; }
   .tile-status-up { color: var(--success); font-weight: 800; font-size: 16px; letter-spacing: -.01em; }
   .incident-chip {
-    display: inline-flex; align-items: center; gap: 5px; flex-wrap: nowrap;
+    display: inline-flex; align-items: center; justify-content: center; gap: 5px; flex-wrap: wrap; row-gap: 2px;
     background: var(--danger-soft); color: var(--danger); border: 1.5px solid var(--danger);
-    border-radius: 14px; padding: 4px 5px 4px 9px; font-size: 11.5px; font-weight: 800; max-width: 100%;
+    border-radius: 14px; padding: 5px 6px 5px 9px; font-size: 12px; font-weight: 800; max-width: 100%;
   }
   .incident-chip .chip-label {
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
+    white-space: normal; overflow-wrap: break-word; text-align: center; flex: 1 1 auto; min-width: 0;
   }
   .incident-chip .chip-timer {
     font-variant-numeric: tabular-nums; font-family: 'Courier New', ui-monospace, monospace;
-    font-weight: 800; font-size: 11px; letter-spacing: -.02em; flex-shrink: 0;
-    background: rgba(0,0,0,.06); border-radius: 999px; padding: 1px 7px; white-space: nowrap;
+    font-weight: 700; font-size: 9.5px; letter-spacing: -.02em; flex-shrink: 0;
+    background: rgba(0,0,0,.06); border-radius: 999px; padding: 1px 6px; white-space: nowrap; opacity: .85;
   }
   .chip-resolve {
     background: var(--success); color: #fff; border: none; border-radius: 50%;
@@ -719,6 +719,17 @@ function fmtDuration(startIso, endIso) {
   return m + ' دقیقه';
 }
 
+// تایمر زنده به فرمت ساعت:دقیقه:ثانیه - فقط با محاسبه‌ی محلی از opened_at، هیچ وابستگی به شیت/سرور نداره
+function fmtTimer(startIso) {
+  const start = new Date(startIso).getTime();
+  let diff = Math.max(0, Math.floor((Date.now() - start) / 1000));
+  const h = Math.floor(diff / 3600); diff -= h * 3600;
+  const m = Math.floor(diff / 60); diff -= m * 60;
+  const s = diff;
+  const pad = n => String(n).padStart(2, '0');
+  return h > 0 ? (pad(h) + ':' + pad(m) + ':' + pad(s)) : (pad(m) + ':' + pad(s));
+}
+
 function typeLabelForCompany(typeObj, company) {
   if (typeObj.dynamicPortal && company) {
     const word = typeObj.dynamicWord || 'قطع';
@@ -926,7 +937,7 @@ function renderIncidentChipHtml(inc, company) {
   const tooltip = (inc.reason ? inc.reason : 'بدون توضیح') + ' — از ' + fmtDateTime(inc.opened_at) + ' (' + fmtDuration(inc.opened_at) + ') — ثبت: ' + (inc.opened_by || '—');
   return '<span class="incident-chip" title="' + escapeHtml(tooltip) + '">' +
     '<span class="chip-label">' + escapeHtml(label) + '</span>' +
-    '<span class="chip-timer">⏱ ' + fmtDuration(inc.opened_at) + '</span>' +
+    '<span class="chip-timer">⏱ ' + fmtTimer(inc.opened_at) + '</span>' +
     (isOperator() ? '<button class="chip-resolve" data-resolve-incident="' + inc.id + '" title="ثبت وصلی">✓</button>' : '') +
     '</span>';
 }
@@ -1239,8 +1250,8 @@ async function init() {
   await refreshAll();
   // رفرش دوره‌ای برای به‌روز نگه‌داشتن مدت‌زمان قطعی‌ها و زمان (حتی بدون realtime)
   setInterval(refreshAll, 30000);
-  // فقط رندر مجدد محلی (بدون درخواست به سرور) تا تایمر مدت‌زمان قطعی هر چند ثانیه جلو بره
-  setInterval(render, 5000);
+  // فقط رندر مجدد محلی (بدون درخواست به سرور یا شیت) تا تایمر مدت‌زمان قطعی هر ثانیه جلو بره
+  setInterval(render, 1000);
 }
 
 init();

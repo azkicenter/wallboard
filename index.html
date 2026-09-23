@@ -398,6 +398,11 @@
       </select>
     </div>
 
+    <div class="field" id="lineDetailWrap" style="display:none;">
+      <label>کدوم رشته‌ی غیرخودرویی قطعه؟</label>
+      <input type="text" id="incLineDetail" style="width:100%;" placeholder="مثلاً: آتش‌سوزی">
+    </div>
+
     <div class="field">
       <label>ساعت شروع قطعی</label>
       <input type="time" id="incTime" style="width:100%;">
@@ -485,11 +490,12 @@ function logToSheet(payload) {
 
 /* عناوین ثابت قطعی - به همون ترتیبی که خواسته شده */
 const OUTAGE_TYPES = [
-  { key: 'sandogh',        label: 'صندوق قطع',            nationwide: false, dynamicPortal: false },
+  { key: 'sandogh',        label: 'مشکل صندوق',           nationwide: false, dynamicPortal: false },
   { key: 'sabt_ahval',     label: 'ثبت احوال',             nationwide: false, dynamicPortal: false },
   { key: 'amlak',          label: 'املاک و اسکان',         nationwide: true,  dynamicPortal: false },
   { key: 'bimeh_markazi',  label: 'استعلام بیمه مرکزی',    nationwide: true,  dynamicPortal: false },
-  { key: 'fanavaran_portal', label: 'فناوران/پرتال قطع',   nationwide: false, dynamicPortal: true },
+  { key: 'fanavaran_portal', label: 'فناوران/پرتال قطع',   nationwide: false, dynamicPortal: true, dynamicWord: 'قطع' },
+  { key: 'fanavaran_portal_disruption', label: 'اختلال فناوران/پرتال', nationwide: false, dynamicPortal: true, dynamicWord: 'اختلال' },
   { key: 'vpn',            label: 'مشکل وی‌پی‌ان',         nationwide: false, dynamicPortal: false },
   { key: 'chap',           label: 'مشکل چاپ',              nationwide: false, dynamicPortal: false },
   { key: 'mali',           label: 'ارسال به مالی',         nationwide: false, dynamicPortal: false }
@@ -498,7 +504,8 @@ const OUTAGE_TYPES = [
 /* رشته‌های بیمه‌ای که وضعیت اتصال‌شون به‌صورت جدا برای هر شرکت نمایش داده می‌شه */
 const INSURANCE_LINES = [
   { key: 'salis',   label: 'ثالث' },
-  { key: 'badaneh', label: 'بدنه' }
+  { key: 'badaneh', label: 'بدنه' },
+  { key: 'gheir_khodroei', label: 'غیر خودرویی', customDetail: true }
 ];
 
 /* ترتیب ثابت نمایش شرکت‌ها (از راست به چپ، از بالا به پایین) -
@@ -707,7 +714,8 @@ function fmtDuration(startIso, endIso) {
 
 function typeLabelForCompany(typeObj, company) {
   if (typeObj.dynamicPortal && company) {
-    return company.portal_group === 'پرتال' ? 'پرتال قطع' : 'فناوران قطع';
+    const word = typeObj.dynamicWord || 'قطع';
+    return company.portal_group === 'پرتال' ? ('پرتال ' + word) : ('فناوران ' + word);
   }
   return typeObj.label;
 }
@@ -888,15 +896,17 @@ function renderLineBadgeHtml(company, line) {
       '<span class="line-name">' + escapeHtml(line.label) + ' ● متصل</span>' +
       '</span>';
   }
+  const displayLabel = (line.customDetail && inc.line_detail) ? inc.line_detail : line.label;
   const tooltip = (inc.reason ? inc.reason : 'بدون توضیح') + ' — از ' + fmtDateTime(inc.opened_at) + ' (' + fmtDuration(inc.opened_at) + ') — ثبت: ' + (inc.opened_by || '—');
   return '<span class="line-badge line-down" title="' + escapeHtml(tooltip) + '">' +
-    '<span class="line-name">' + escapeHtml(line.label) + ' ● قطع</span>' +
+    '<span class="line-name">' + escapeHtml(displayLabel) + ' ● قطع</span>' +
     (isOperator() ? '<button class="chip-resolve line-report-btn" data-resolve-incident="' + inc.id + '" title="ثبت وصلی">✓</button>' : '') +
     '</span>';
 }
 
 function renderIncidentChipHtml(inc, company) {
-  const typeObj = OUTAGE_TYPES.find(t => t.label === inc.title || (t.dynamicPortal && (inc.title === 'پرتال قطع' || inc.title === 'فناوران قطع')));
+  const typeObj = OUTAGE_TYPES.find(t => t.label === inc.title ||
+    (t.dynamicPortal && inc.title === typeLabelForCompany(t, company)));
   const label = typeObj ? typeLabelForCompany(typeObj, company) : inc.title;
   const tooltip = (inc.reason ? inc.reason : 'بدون توضیح') + ' — از ' + fmtDateTime(inc.opened_at) + ' (' + fmtDuration(inc.opened_at) + ') — ثبت: ' + (inc.opened_by || '—');
   return '<span class="incident-chip" title="' + escapeHtml(tooltip) + '">' +
@@ -925,7 +935,17 @@ function fillIncidentModalSelectors(preselectCompanyId, preselectLineKey) {
     INSURANCE_LINES.map(l => '<option value="' + l.key + '">' + l.label + '</option>').join('');
   lineSel.value = preselectLineKey || '';
 
+  updateLineDetailVisibility();
   updateNationwideVisibility();
+}
+
+// وقتی رشته‌ی «غیر خودرویی» انتخاب بشه، فیلد ورود دستی نام رشته نمایش داده می‌شه
+function updateLineDetailVisibility() {
+  const lineKey = document.getElementById('incLine').value;
+  const lineObj = INSURANCE_LINES.find(l => l.key === lineKey);
+  const wrap = document.getElementById('lineDetailWrap');
+  wrap.style.display = (lineObj && lineObj.customDetail) ? 'block' : 'none';
+  if (!lineObj || !lineObj.customDetail) document.getElementById('incLineDetail').value = '';
 }
 
 function updateNationwideVisibility() {
@@ -945,6 +965,7 @@ function updateCompanyFieldVisibility() {
 function openIncidentModal(preselectCompanyId, preselectLineKey) {
   document.getElementById('incWarnBox').style.display = 'none';
   document.getElementById('incReason').value = '';
+  document.getElementById('incLineDetail').value = '';
   document.getElementById('incTime').value = nowTimeHHMM();
   pendingIncidentPayload = null;
   fillIncidentModalSelectors(preselectCompanyId, preselectLineKey);
@@ -974,6 +995,14 @@ async function submitIncident(force) {
   const isNationwide = typeObj.nationwide && document.getElementById('incNationwide').checked;
   const reason = document.getElementById('incReason').value.trim();
   const lineKey = document.getElementById('incLine').value || null;
+  const lineObj = INSURANCE_LINES.find(l => l.key === lineKey);
+  const lineDetail = (lineObj && lineObj.customDetail) ? document.getElementById('incLineDetail').value.trim() : null;
+  if (lineObj && lineObj.customDetail && !lineDetail) {
+    const warnBox = document.getElementById('incWarnBox');
+    warnBox.style.display = 'block';
+    warnBox.textContent = '⚠️ لطفاً بنویس کدوم رشته‌ی غیرخودرویی قطعه.';
+    return;
+  }
   const targetCompanies = isNationwide ? companies : [companies.find(c => c.id === document.getElementById('incCompany').value)];
 
   if (!force) {
@@ -1005,6 +1034,7 @@ async function submitIncident(force) {
         company_id: c.id,
         title: typeLabelForCompany(typeObj, c),
         line: lineKey,
+        line_detail: lineDetail,
         is_nationwide: isNationwide,
         batch_id: batchId,
         reason: reason || null,
@@ -1021,7 +1051,7 @@ async function submitIncident(force) {
           company: c.name,
           tag: typeLabelForCompany(typeObj, c),
           reason: reason || '',
-          line: (INSURANCE_LINES.find(l => l.key === lineKey) || {}).label || '',
+          line: lineDetail || (lineObj || {}).label || '',
           time: document.getElementById('incTime').value || nowTimeHHMM(),
           ...faDateParts(openedAt)
         });
@@ -1034,7 +1064,7 @@ async function submitIncident(force) {
         company: 'تمام شرکت‌ها',
         tag: typeLabelForCompany(typeObj, targetCompanies.find(c => c) || {}),
         reason: reason || '',
-        line: (INSURANCE_LINES.find(l => l.key === lineKey) || {}).label || '',
+        line: lineDetail || (lineObj || {}).label || '',
         time: document.getElementById('incTime').value || nowTimeHHMM(),
         ...faDateParts(openedAt)
       });
@@ -1107,6 +1137,7 @@ document.getElementById('newIncidentBtn').addEventListener('click', () => openIn
 
 document.getElementById('incTitle').addEventListener('change', updateNationwideVisibility);
 document.getElementById('incNationwide').addEventListener('change', updateCompanyFieldVisibility);
+document.getElementById('incLine').addEventListener('change', updateLineDetailVisibility);
 
 document.getElementById('incSubmitBtn').addEventListener('click', () => {
   submitIncident(!!pendingIncidentPayload);

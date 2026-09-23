@@ -374,6 +374,11 @@
     <h2>ثبت قطعی جدید</h2>
     <p class="sub">شرکت و نوع قطعی رو انتخاب کن و علتش رو بنویس.</p>
 
+    <div class="field">
+      <label>عنوان قطعی</label>
+      <select id="incTitle" style="width:100%;"></select>
+    </div>
+
     <div class="field" id="nationwideCheckWrap" style="display:none;">
       <label class="checkbox-row">
         <input type="checkbox" id="incNationwide">
@@ -384,11 +389,6 @@
     <div class="field" id="companyFieldWrap">
       <label>شرکت</label>
       <select id="incCompany" style="width:100%;"></select>
-    </div>
-
-    <div class="field">
-      <label>عنوان قطعی</label>
-      <select id="incTitle" style="width:100%;"></select>
     </div>
 
     <div class="field">
@@ -738,9 +738,9 @@ function generalOpenIncidentsFor(companyId) {
   return openIncidentsFor(companyId).filter(i => !i.line);
 }
 
-// قطعی باز یک رشته‌ی مشخص برای یک شرکت (ثالث/بدنه)
-function openLineIncidentFor(companyId, lineKey) {
-  return incidents.find(i => i.company_id === companyId && i.status === 'open' && i.line === lineKey);
+// قطعی باز یک رشته‌ی مشخص برای یک شرکت (ثالث/بدنه) - همه‌ی موارد باز (ممکنه چندتا هم‌زمان باشه، مثلاً چند زیررشته‌ی غیرخودرویی)
+function openLineIncidentsFor(companyId, lineKey) {
+  return incidents.filter(i => i.company_id === companyId && i.status === 'open' && i.line === lineKey);
 }
 
 /* ==========================================================
@@ -841,7 +841,7 @@ function renderNationwideBanners() {
   wrap.innerHTML = '';
   const nationwideTitles = OUTAGE_TYPES.filter(t => t.nationwide).map(t => t.label);
   nationwideTitles.forEach(title => {
-    const openForTitle = incidents.filter(i => i.status === 'open' && i.title === title);
+    const openForTitle = incidents.filter(i => i.status === 'open' && i.title === title && i.is_nationwide);
     if (openForTitle.length === 0) return;
     const el = document.createElement('div');
     el.className = 'nationwide-banner';
@@ -884,10 +884,11 @@ function renderCompanyList() {
   });
 }
 
-// بج وضعیت هر رشته (ثالث/بدنه) برای یک شرکت: سبز و متصل، یا قرمز و قطع با دکمه‌ی تیک برای ثبت وصلی
+// بج وضعیت هر رشته (ثالث/بدنه/غیرخودرویی) برای یک شرکت: سبز و متصل، یا قرمز و قطع با دکمه‌ی تیک برای ثبت وصلی
+// اگه چندتا زیررشته هم‌زمان قطع باشن (مثلاً چند مورد غیرخودرویی)، با «و» به هم وصل می‌شن
 function renderLineBadgeHtml(company, line) {
-  const inc = openLineIncidentFor(company.id, line.key);
-  if (!inc) {
+  const incList = openLineIncidentsFor(company.id, line.key);
+  if (incList.length === 0) {
     // متصله - اگه اپراتوره، خود بج قابل‌کلیکه تا مستقیم قطعی همون رشته ثبت بشه
     const clickableAttr = isOperator()
       ? ' data-quick-incident-line="' + company.id + '|' + line.key + '" title="ثبت قطعی برای رشته‌ی ' + escapeHtml(line.label) + '"'
@@ -896,11 +897,18 @@ function renderLineBadgeHtml(company, line) {
       '<span class="line-name">' + escapeHtml(line.label) + ' ● متصل</span>' +
       '</span>';
   }
-  const displayLabel = (line.customDetail && inc.line_detail) ? inc.line_detail : line.label;
-  const tooltip = (inc.reason ? inc.reason : 'بدون توضیح') + ' — از ' + fmtDateTime(inc.opened_at) + ' (' + fmtDuration(inc.opened_at) + ') — ثبت: ' + (inc.opened_by || '—');
+  const displayLabel = line.customDetail
+    ? incList.map(i => i.line_detail || line.label).join(' و ')
+    : line.label;
+  const tooltip = incList.map(i =>
+    (i.reason ? i.reason : 'بدون توضیح') + ' — از ' + fmtDateTime(i.opened_at) + ' (' + fmtDuration(i.opened_at) + ') — ثبت: ' + (i.opened_by || '—')
+  ).join(' | ');
+  const resolveButtonsHtml = isOperator()
+    ? incList.map(i => '<button class="chip-resolve line-report-btn" data-resolve-incident="' + i.id + '" title="ثبت وصلی' + (i.line_detail ? ' برای ' + escapeHtml(i.line_detail) : '') + '">✓</button>').join('')
+    : '';
   return '<span class="line-badge line-down" title="' + escapeHtml(tooltip) + '">' +
     '<span class="line-name">' + escapeHtml(displayLabel) + ' ● قطع</span>' +
-    (isOperator() ? '<button class="chip-resolve line-report-btn" data-resolve-incident="' + inc.id + '" title="ثبت وصلی">✓</button>' : '') +
+    resolveButtonsHtml +
     '</span>';
 }
 
@@ -910,7 +918,7 @@ function renderIncidentChipHtml(inc, company) {
   const label = typeObj ? typeLabelForCompany(typeObj, company) : inc.title;
   const tooltip = (inc.reason ? inc.reason : 'بدون توضیح') + ' — از ' + fmtDateTime(inc.opened_at) + ' (' + fmtDuration(inc.opened_at) + ') — ثبت: ' + (inc.opened_by || '—');
   return '<span class="incident-chip" title="' + escapeHtml(tooltip) + '">' +
-    '<span class="chip-label">' + escapeHtml(label) + '</span>' +
+    '<span class="chip-label">' + escapeHtml(label) + ' — ' + fmtDuration(inc.opened_at) + '</span>' +
     (isOperator() ? '<button class="chip-resolve" data-resolve-incident="' + inc.id + '" title="ثبت وصلی">✓</button>' : '') +
     '</span>';
 }
@@ -1006,13 +1014,15 @@ async function submitIncident(force) {
   const targetCompanies = isNationwide ? companies : [companies.find(c => c.id === document.getElementById('incCompany').value)];
 
   if (!force) {
-    // چک تکراری بودن برای هرکدوم از شرکت‌های هدف - عنوان و رشته باید هر دو یکی باشن تا تکراری حساب بشه
-    const dup = targetCompanies.find(c => c && openIncidentsFor(c.id).some(i => i.title === typeLabelForCompany(typeObj, c) && (i.line || null) === lineKey));
+    // چک تکراری بودن: عنوان و رشته باید یکی باشن؛ برای رشته‌های دارای جزئیات دستی (غیرخودرویی) جزئیات هم باید یکی باشه
+    const isSameIncident = (i, c) => i.title === typeLabelForCompany(typeObj, c) && (i.line || null) === lineKey &&
+      (lineObj && lineObj.customDetail ? (i.line_detail || '') === lineDetail : true);
+    const dup = targetCompanies.find(c => c && openIncidentsFor(c.id).some(i => isSameIncident(i, c)));
     if (dup) {
-      const existing = openIncidentsFor(dup.id).find(i => i.title === typeLabelForCompany(typeObj, dup) && (i.line || null) === lineKey);
+      const existing = openIncidentsFor(dup.id).find(i => isSameIncident(i, dup));
       const warnBox = document.getElementById('incWarnBox');
       warnBox.style.display = 'block';
-      warnBox.textContent = '⚠️ شرکت «' + dup.name + '» از قبل قطعی «' + existing.title + '» داره که هنوز وصل نشده (از ' + fmtDateTime(existing.opened_at) + '). اگه مطمئنی، دوباره روی «ثبت قطعی» بزن تا ثبت مجدد بشه.';
+      warnBox.textContent = '⚠️ شرکت «' + dup.name + '» از قبل قطعی «' + existing.title + (existing.line_detail ? ' - ' + existing.line_detail : '') + '» داره که هنوز وصل نشده (از ' + fmtDateTime(existing.opened_at) + '). اگه مطمئنی، دوباره روی «ثبت قطعی» بزن تا ثبت مجدد بشه.';
       pendingIncidentPayload = true; // دفعه‌ی بعد force بشه
       return;
     }
@@ -1051,7 +1061,7 @@ async function submitIncident(force) {
           company: c.name,
           tag: typeLabelForCompany(typeObj, c),
           reason: reason || '',
-          line: lineDetail || (lineObj || {}).label || '',
+          line: lineDetail || (lineObj || {}).label || 'همه رشته‌ها',
           time: document.getElementById('incTime').value || nowTimeHHMM(),
           ...faDateParts(openedAt)
         });
@@ -1064,7 +1074,7 @@ async function submitIncident(force) {
         company: 'تمام شرکت‌ها',
         tag: typeLabelForCompany(typeObj, targetCompanies.find(c => c) || {}),
         reason: reason || '',
-        line: lineDetail || (lineObj || {}).label || '',
+        line: lineDetail || (lineObj || {}).label || 'همه رشته‌ها',
         time: document.getElementById('incTime').value || nowTimeHHMM(),
         ...faDateParts(openedAt)
       });
@@ -1090,7 +1100,7 @@ async function resolveIncident(id) {
 
 async function resolveAllForTitle(title) {
   const closedBy = session && session.user ? session.user.email : 'نامشخص';
-  const open = incidents.filter(i => i.status === 'open' && i.title === title);
+  const open = incidents.filter(i => i.status === 'open' && i.title === title && i.is_nationwide);
   for (const inc of open) {
     await closeIncidentRow(inc.id, closedBy);
     logToSheet({ action: 'resolve', id: inc.id, time: nowTimeHHMM(), ...faDateParts(new Date()) });
@@ -1221,6 +1231,8 @@ async function init() {
   await refreshAll();
   // رفرش دوره‌ای برای به‌روز نگه‌داشتن مدت‌زمان قطعی‌ها و زمان (حتی بدون realtime)
   setInterval(refreshAll, 30000);
+  // فقط رندر مجدد محلی (بدون درخواست به سرور) تا تایمر مدت‌زمان قطعی هر چند ثانیه جلو بره
+  setInterval(render, 5000);
 }
 
 init();

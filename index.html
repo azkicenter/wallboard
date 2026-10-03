@@ -844,7 +844,7 @@ async function doLogin(email, password) {
   session = data.session;
   // فقط نقش admin اجازه‌ی ثبت قطعی/وصلی داره (کنترل اصلی سمت دیتابیس و با RLS هست؛ این فقط برای رابط کاربریه)
   if (!isOperator()) {
-    await sb.auth.signOut();
+    await sb.auth.signOut({ scope: 'local' });
     session = null;
     return { ok: false, message: 'این کاربر دسترسی ثبت قطعی نداره (فقط نقش admin).' };
   }
@@ -852,7 +852,8 @@ async function doLogin(email, password) {
 }
 
 async function doLogout() {
-  if (CONFIGURED) await sb.auth.signOut();
+  // scope local: فقط همین مرورگر/همین وال‌برد خارج بشه، نه داشبوردهای دیگه‌ی همین کاربر
+  if (CONFIGURED) await sb.auth.signOut({ scope: 'local' });
   session = null;
   render();
 }
@@ -1272,7 +1273,10 @@ async function init() {
   document.getElementById('configBanner').style.display = CONFIGURED ? 'none' : 'flex';
 
   if (CONFIGURED) {
-    sb = window.supabase.createClient(CONFIG.url, CONFIG.anonKey);
+    // کلید ذخیره‌ی اختصاصی: session این وال‌برد از session داشبوردهای دیگه‌ی همین پروژه‌ی Supabase جدا می‌مونه
+    sb = window.supabase.createClient(CONFIG.url, CONFIG.anonKey, {
+      auth: { storageKey: 'wallboard-status-auth', persistSession: true, autoRefreshToken: true }
+    });
     const { data: { session: s } } = await sb.auth.getSession();
     session = s;
     sb.auth.onAuthStateChange((_event, s2) => { session = s2; render(); });

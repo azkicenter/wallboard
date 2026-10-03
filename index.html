@@ -842,11 +842,12 @@ async function doLogin(email, password) {
   const { data, error } = await sb.auth.signInWithPassword({ email, password });
   if (error) return { ok: false, message: 'ایمیل یا رمز عبور اشتباهه.' };
   session = data.session;
-  // فقط نقش admin اجازه‌ی ثبت قطعی/وصلی داره (کنترل اصلی سمت دیتابیس و با RLS هست؛ این فقط برای رابط کاربریه)
-  if (!isOperator()) {
+  // فقط نقش admin (ثبت قطعی/وصلی) و viewer (فقط مشاهده) اجازه‌ی ورود دارن.
+  // کنترل اصلی ثبت سمت دیتابیس و با RLS هست؛ این فقط برای رابط کاربریه.
+  if (userRole() !== 'admin' && userRole() !== 'viewer') {
     await sb.auth.signOut({ scope: 'local' });
     session = null;
-    return { ok: false, message: 'این کاربر دسترسی ثبت قطعی نداره (فقط نقش admin).' };
+    return { ok: false, message: 'این کاربر دسترسی به این وال‌برد نداره.' };
   }
   return { ok: true };
 }
@@ -860,9 +861,10 @@ async function doLogout() {
 
 function isLoggedIn() { return !!session; }
 // نقش از app_metadata خونده می‌شه (کاربر نمی‌تونه خودش عوضش کنه)، نه user_metadata
-function isOperator() {
-  return !!(session && session.user && session.user.app_metadata && session.user.app_metadata.role === 'admin');
+function userRole() {
+  return (session && session.user && session.user.app_metadata && session.user.app_metadata.role) || null;
 }
+function isOperator() { return userRole() === 'admin'; }
 
 /* ==========================================================
    RENDER
@@ -877,7 +879,7 @@ function renderTopbar() {
   document.getElementById('loginBtn').style.display = isLoggedIn() ? 'none' : 'inline-block';
   document.getElementById('logoutBtn').style.display = isLoggedIn() ? 'inline-flex' : 'none';
   document.getElementById('operatorChip').style.display = isLoggedIn() ? 'inline-flex' : 'none';
-  if (isLoggedIn()) document.getElementById('operatorEmail').textContent = session.user.email;
+  if (isLoggedIn()) document.getElementById('operatorEmail').textContent = session.user.email + (isOperator() ? '' : ' (مشاهده‌گر)');
   document.getElementById('newIncidentBtn').style.display = isOperator() ? 'inline-block' : 'none';
 }
 

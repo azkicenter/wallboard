@@ -259,7 +259,7 @@
 
 
   /* ---------- log table ---------- */
-  select, input[type="text"], input[type="email"], input[type="password"], input[type="time"], textarea {
+  select, input[type="text"], input[type="email"], input[type="password"], input[type="time"], input[type="date"], textarea {
     font-family: var(--font); font-size: 13.5px; color: var(--ink); background: var(--surface-tint);
     border: 1.5px solid var(--line); border-radius: var(--radius-sm); padding: 9px 12px; outline: none;
     -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
@@ -435,6 +435,20 @@
     <button class="modal-close-x" data-close="resolveModal">×</button>
     <h2>ثبت وصلی</h2>
     <p class="sub" id="resolveSub"></p>
+
+    <div class="field">
+      <label>تاریخ وصلی</label>
+      <input type="date" id="resolveDate" style="width:100%;">
+      <div class="sub" id="resolveDateFa" style="margin:6px 0 0;"></div>
+    </div>
+
+    <div class="field">
+      <label>ساعت وصلی</label>
+      <input type="time" id="resolveTime" style="width:100%;">
+    </div>
+
+    <div class="warn-box" id="resolveWarnBox" style="display:none;"></div>
+
     <div class="modal-actions">
       <button class="btn btn-ghost" data-close="resolveModal">انصراف</button>
       <button class="btn btn-success" id="resolveSubmitBtn">تایید وصلی</button>
@@ -505,7 +519,8 @@ const OUTAGE_TYPES = [
   { key: 'fanavaran_portal_disruption', label: 'اختلال فناوران/پرتال', nationwide: false, dynamicPortal: true, dynamicWord: 'اختلال' },
   { key: 'vpn',            label: 'مشکل وی‌پی‌ان',         nationwide: false, dynamicPortal: false },
   { key: 'chap',           label: 'مشکل چاپ',              nationwide: false, dynamicPortal: false },
-  { key: 'mali',           label: 'ارسال به مالی',         nationwide: false, dynamicPortal: false }
+  { key: 'mali',           label: 'ارسال به مالی',         nationwide: false, dynamicPortal: false },
+  { key: 'ekhtelaf_nerkh', label: 'اختلاف نرخ',            nationwide: false, dynamicPortal: false }
 ];
 
 /* رشته‌های بیمه‌ای که وضعیت اتصال‌شون به‌صورت جدا برای هر شرکت نمایش داده می‌شه */
@@ -809,8 +824,8 @@ async function createIncidentRow(row) {
   return newRow;
 }
 
-async function closeIncidentRow(id, closedBy) {
-  const patch = { status: 'closed', closed_at: new Date().toISOString(), closed_by: closedBy };
+async function closeIncidentRow(id, closedBy, closedAt) {
+  const patch = { status: 'closed', closed_at: (closedAt || new Date()).toISOString(), closed_by: closedBy };
   if (CONFIGURED) {
     const { error } = await sb.from('incidents').update(patch).eq('id', id);
     if (error) throw error;
@@ -1042,6 +1057,39 @@ function nowTimeHHMM() {
   return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
 }
 
+function hhmmOf(d) {
+  return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+}
+function ymdOf(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+// فرم وصلی رو با تاریخ و ساعت الان پر می‌کنه
+function prepareResolveModal() {
+  const now = new Date();
+  document.getElementById('resolveDate').value = ymdOf(now);
+  document.getElementById('resolveTime').value = hhmmOf(now);
+  document.getElementById('resolveWarnBox').style.display = 'none';
+  updateResolveDateFa();
+}
+function updateResolveDateFa() {
+  const v = document.getElementById('resolveDate').value;
+  const el = document.getElementById('resolveDateFa');
+  if (!v) { el.textContent = ''; return; }
+  const [y, m, d] = v.split('-').map(Number);
+  el.textContent = 'شمسی: ' + new Intl.DateTimeFormat('fa-IR-u-ca-persian', { year: 'numeric', month: 'long', day: 'numeric' }).format(new Date(y, m - 1, d));
+}
+// تاریخ/ساعت واردشده توی فرم وصلی رو به Date تبدیل می‌کنه (null اگه ناقص باشه)
+function readResolveDateTime() {
+  const dv = document.getElementById('resolveDate').value;
+  const tv = document.getElementById('resolveTime').value;
+  if (!dv || !tv) return null;
+  const [y, m, d] = dv.split('-').map(Number);
+  const [hh, mm] = tv.split(':').map(Number);
+  const dt = new Date(y, m - 1, d, hh, mm, 0, 0);
+  return isNaN(dt.getTime()) ? null : dt;
+}
+
 // ساعت واردشده رو با تاریخ امروز ترکیب می‌کنه و یه تاریخ/زمان کامل می‌سازه
 function buildOpenedAt(timeStr) {
   const now = new Date();
@@ -1148,19 +1196,21 @@ async function submitIncident(force) {
   }
 }
 
-async function resolveIncident(id) {
+async function resolveIncident(id, closedAt) {
   const closedBy = session && session.user ? session.user.email : 'نامشخص';
-  await closeIncidentRow(id, closedBy);
-  logToSheet({ action: 'resolve', id, time: nowTimeHHMM(), ...faDateParts(new Date()) });
+  closedAt = closedAt || new Date();
+  await closeIncidentRow(id, closedBy, closedAt);
+  logToSheet({ action: 'resolve', id, time: hhmmOf(closedAt), ...faDateParts(closedAt) });
   await refreshAll();
 }
 
-async function resolveAllForTitle(title) {
+async function resolveAllForTitle(title, closedAt) {
+  closedAt = closedAt || new Date();
   const closedBy = session && session.user ? session.user.email : 'نامشخص';
   const open = incidents.filter(i => i.status === 'open' && i.title === title && i.is_nationwide);
   for (const inc of open) {
-    await closeIncidentRow(inc.id, closedBy);
-    logToSheet({ action: 'resolve', id: inc.id, time: nowTimeHHMM(), ...faDateParts(new Date()) });
+    await closeIncidentRow(inc.id, closedBy, closedAt);
+    logToSheet({ action: 'resolve', id: inc.id, time: hhmmOf(closedAt), ...faDateParts(closedAt) });
   }
   await refreshAll();
 }
@@ -1212,9 +1262,31 @@ document.getElementById('incSubmitBtn').addEventListener('click', () => {
 
 let resolvingIncidentId = null;
 let resolvingAllTitle = null;
+document.getElementById('resolveDate').addEventListener('input', updateResolveDateFa);
 document.getElementById('resolveSubmitBtn').addEventListener('click', async () => {
-  if (resolvingIncidentId) await resolveIncident(resolvingIncidentId);
-  if (resolvingAllTitle) await resolveAllForTitle(resolvingAllTitle);
+  const warn = document.getElementById('resolveWarnBox');
+  const closedAt = readResolveDateTime();
+  if (!closedAt) {
+    warn.textContent = '⚠️ تاریخ و ساعت وصلی رو کامل وارد کن.';
+    warn.style.display = 'block';
+    return;
+  }
+  if (closedAt.getTime() > Date.now() + 60000) {
+    warn.textContent = '⚠️ زمان وصلی نمی‌تونه توی آینده باشه.';
+    warn.style.display = 'block';
+    return;
+  }
+  const targets = resolvingIncidentId
+    ? incidents.filter(i => String(i.id) === String(resolvingIncidentId))
+    : incidents.filter(i => i.status === 'open' && i.title === resolvingAllTitle && i.is_nationwide);
+  if (targets.some(i => i.opened_at && closedAt < new Date(i.opened_at))) {
+    warn.textContent = '⚠️ زمان وصلی نمی‌تونه قبل از شروع قطعی باشه.';
+    warn.style.display = 'block';
+    return;
+  }
+  warn.style.display = 'none';
+  if (resolvingIncidentId) await resolveIncident(resolvingIncidentId, closedAt);
+  if (resolvingAllTitle) await resolveAllForTitle(resolvingAllTitle, closedAt);
   resolvingIncidentId = null; resolvingAllTitle = null;
   closeModal('resolveModal');
 });
@@ -1235,6 +1307,7 @@ document.addEventListener('click', (e) => {
     resolvingIncidentId = resolveBtn.getAttribute('data-resolve-incident');
     resolvingAllTitle = null;
     document.getElementById('resolveSub').textContent = 'مطمئنی این قطعی به وضعیت متصل برمی‌گرده؟';
+    prepareResolveModal();
     document.getElementById('resolveModal').classList.add('open');
     return;
   }
@@ -1244,6 +1317,7 @@ document.addEventListener('click', (e) => {
     resolvingAllTitle = resolveAllBtn.getAttribute('data-resolve-all-title');
     resolvingIncidentId = null;
     document.getElementById('resolveSub').textContent = 'وصلی برای همه‌ی شرکت‌های درگیر «' + resolvingAllTitle + '» ثبت می‌شه. ادامه بدیم؟';
+    prepareResolveModal();
     document.getElementById('resolveModal').classList.add('open');
     return;
   }

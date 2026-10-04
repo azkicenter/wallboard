@@ -174,6 +174,15 @@
   }
   .nationwide-banner .txt { display: flex; align-items: center; gap: 10px; font-size: 13.5px; font-weight: 700; color: var(--danger); }
 
+  /* ---------- admin notice (تگ‌های نوتیس‌محور مثل اختلاف نرخ) ---------- */
+  .admin-notice {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    background: var(--amber-soft); border: 1px solid var(--amber); border-radius: var(--radius);
+    padding: 12px 18px; margin-bottom: 12px;
+  }
+  .admin-notice .txt { font-size: 13.5px; font-weight: 700; color: var(--amber); line-height: 1.8; }
+  .admin-notice .txt small { display: block; font-weight: 500; opacity: .85; }
+
   /* ---------- company board (تابلو وضعیت شرکت‌ها) ---------- */
   /* از grid به flex-wrap تغییر کرد تا ردیف‌های ناقص (مثلاً ردیف آخر) به‌جای چسبیدن به یک طرف، وسط‌چین بشن */
   .company-list {
@@ -340,6 +349,7 @@
     ⚠️ تنظیمات Supabase انجام نشده؛ الان داده‌های نمایشی (غیرواقعی و غیرماندگار) نشون داده می‌شه. آدرس URL و anon key رو در ابتدای کد (بخش CONFIG) وارد کن.
   </div>
 
+  <div id="adminNotices"></div>
   <div id="nationwideBanners"></div>
 
   <div class="panel" id="panel-live">
@@ -398,7 +408,7 @@
       <select id="incCompany" style="width:100%;"></select>
     </div>
 
-    <div class="field">
+    <div class="field" id="lineFieldWrap">
       <label>رشته</label>
       <select id="incLine" style="width:100%;">
         <option value="">— عمومی (مختص یک رشته‌ی خاص نیست)</option>
@@ -433,17 +443,17 @@
 <div class="modal-overlay" id="resolveModal">
   <div class="modal-card">
     <button class="modal-close-x" data-close="resolveModal">×</button>
-    <h2>ثبت وصلی</h2>
+    <h2 id="resolveTitle">ثبت وصلی</h2>
     <p class="sub" id="resolveSub"></p>
 
     <div class="field">
-      <label>تاریخ وصلی</label>
+      <label id="resolveDateLbl">تاریخ وصلی</label>
       <input type="date" id="resolveDate" style="width:100%;">
       <div class="sub" id="resolveDateFa" style="margin:6px 0 0;"></div>
     </div>
 
     <div class="field">
-      <label>ساعت وصلی</label>
+      <label id="resolveTimeLbl">ساعت وصلی</label>
       <input type="time" id="resolveTime" style="width:100%;">
     </div>
 
@@ -520,8 +530,13 @@ const OUTAGE_TYPES = [
   { key: 'vpn',            label: 'مشکل وی‌پی‌ان',         nationwide: false, dynamicPortal: false },
   { key: 'chap',           label: 'مشکل چاپ',              nationwide: false, dynamicPortal: false },
   { key: 'mali',           label: 'ارسال به مالی',         nationwide: false, dynamicPortal: false },
-  { key: 'ekhtelaf_nerkh', label: 'اختلاف نرخ',            nationwide: false, dynamicPortal: false }
+  { key: 'ekhtelaf_nerkh', label: 'اختلاف نرخ',            nationwide: false, dynamicPortal: false, noticeOnly: true }
 ];
+
+/* عنوان‌هایی که «قطعی» حساب نمی‌شن: وضعیت شرکت رو قرمز نمی‌کنن، توی وال‌برد عمومی دیده نمی‌شن،
+   توی گوگل‌شیت لاگ نمی‌شن و فقط به‌صورت نوتیس بالای صفحه برای ادمین نمایش داده می‌شن */
+const NOTICE_ONLY_TITLES = OUTAGE_TYPES.filter(t => t.noticeOnly).map(t => t.label);
+function isNoticeIncident(i) { return !!i && NOTICE_ONLY_TITLES.includes(i.title); }
 
 /* رشته‌های بیمه‌ای که وضعیت اتصال‌شون به‌صورت جدا برای هر شرکت نمایش داده می‌شه */
 const INSURANCE_LINES = [
@@ -777,8 +792,19 @@ function sortCompaniesForDisplay(list) {
   return [...list].sort((a, b) => companyRank(a) - companyRank(b) || a.name.localeCompare(b.name, 'fa'));
 }
 
-function openIncidentsFor(companyId) {
+// همه‌ی موارد باز یک شرکت (شامل تگ‌های نوتیس‌محور مثل اختلاف نرخ) - فقط برای چک تکراری
+function allOpenFor(companyId) {
   return incidents.filter(i => i.company_id === companyId && i.status === 'open');
+}
+
+// قطعی‌های واقعی باز یک شرکت (بدون تگ‌های نوتیس‌محور)
+function openIncidentsFor(companyId) {
+  return allOpenFor(companyId).filter(i => !isNoticeIncident(i));
+}
+
+// تگ‌های نوتیس‌محور باز (اختلاف نرخ) - فقط برای نمایش به ادمین
+function openNotices() {
+  return incidents.filter(i => i.status === 'open' && isNoticeIncident(i));
 }
 
 // قطعی‌های عمومی (بدون رشته‌ی مشخص) یک شرکت - برای نمایش به‌صورت chip مثل قبل
@@ -788,7 +814,7 @@ function generalOpenIncidentsFor(companyId) {
 
 // قطعی باز یک رشته‌ی مشخص برای یک شرکت (ثالث/بدنه) - همه‌ی موارد باز (ممکنه چندتا هم‌زمان باشه، مثلاً چند زیررشته‌ی غیرخودرویی)
 function openLineIncidentsFor(companyId, lineKey) {
-  return incidents.filter(i => i.company_id === companyId && i.status === 'open' && i.line === lineKey);
+  return incidents.filter(i => i.company_id === companyId && i.status === 'open' && i.line === lineKey && !isNoticeIncident(i));
 }
 
 /* ==========================================================
@@ -886,6 +912,7 @@ function isOperator() { return userRole() === 'admin'; }
 ========================================================== */
 function render() {
   renderTopbar();
+  renderAdminNotices();
   renderNationwideBanners();
   renderCompanyList();
 }
@@ -896,6 +923,22 @@ function renderTopbar() {
   document.getElementById('operatorChip').style.display = isLoggedIn() ? 'inline-flex' : 'none';
   if (isLoggedIn()) document.getElementById('operatorEmail').textContent = session.user.email + (isOperator() ? '' : ' (مشاهده‌گر)');
   document.getElementById('newIncidentBtn').style.display = isOperator() ? 'inline-block' : 'none';
+}
+
+function renderAdminNotices() {
+  const wrap = document.getElementById('adminNotices');
+  wrap.innerHTML = '';
+  if (!isOperator()) return; // فقط ادمین
+  openNotices().forEach(inc => {
+    const company = companies.find(c => c.id === inc.company_id);
+    const el = document.createElement('div');
+    el.className = 'admin-notice';
+    el.innerHTML =
+      '<div class="txt">🏷️ شرکت «' + escapeHtml(company ? company.name : 'نامشخص') + '» دارای تگ «' + escapeHtml(inc.title) + '» است — از ' + fmtDateTime(inc.opened_at) +
+      (inc.reason ? '<small>' + escapeHtml(inc.reason) + '</small>' : '') + '</div>' +
+      '<button class="btn btn-success btn-sm" data-resolve-notice="' + inc.id + '">رفع تگ</button>';
+    wrap.appendChild(el);
+  });
 }
 
 function renderNationwideBanners() {
@@ -1034,6 +1077,10 @@ function updateNationwideVisibility() {
   const wrap = document.getElementById('nationwideCheckWrap');
   wrap.style.display = (typeObj && typeObj.nationwide) ? 'block' : 'none';
   if (!typeObj || !typeObj.nationwide) document.getElementById('incNationwide').checked = false;
+  // تگ‌های نوتیس‌محور (اختلاف نرخ) مختص رشته نیستن
+  const noticeOnly = !!(typeObj && typeObj.noticeOnly);
+  document.getElementById('lineFieldWrap').style.display = noticeOnly ? 'none' : 'block';
+  if (noticeOnly) { document.getElementById('incLine').value = ''; updateLineDetailVisibility(); }
   updateCompanyFieldVisibility();
 }
 
@@ -1065,7 +1112,11 @@ function ymdOf(d) {
 }
 
 // فرم وصلی رو با تاریخ و ساعت الان پر می‌کنه
-function prepareResolveModal() {
+function prepareResolveModal(isNotice) {
+  document.getElementById('resolveTitle').textContent = isNotice ? 'رفع تگ' : 'ثبت وصلی';
+  document.getElementById('resolveDateLbl').textContent = isNotice ? 'تاریخ رفع' : 'تاریخ وصلی';
+  document.getElementById('resolveTimeLbl').textContent = isNotice ? 'ساعت رفع' : 'ساعت وصلی';
+  document.getElementById('resolveSubmitBtn').textContent = isNotice ? 'تایید رفع' : 'تایید وصلی';
   const now = new Date();
   document.getElementById('resolveDate').value = ymdOf(now);
   document.getElementById('resolveTime').value = hhmmOf(now);
@@ -1107,7 +1158,7 @@ async function submitIncident(force) {
   const typeObj = OUTAGE_TYPES.find(t => t.key === titleKey);
   const isNationwide = typeObj.nationwide && document.getElementById('incNationwide').checked;
   const reason = document.getElementById('incReason').value.trim();
-  const lineKey = document.getElementById('incLine').value || null;
+  const lineKey = typeObj.noticeOnly ? null : (document.getElementById('incLine').value || null);
   const lineObj = INSURANCE_LINES.find(l => l.key === lineKey);
   const lineDetail = (lineObj && lineObj.customDetail) ? document.getElementById('incLineDetail').value.trim() : null;
   if (lineObj && lineObj.customDetail && !lineDetail) {
@@ -1122,9 +1173,9 @@ async function submitIncident(force) {
     // چک تکراری بودن: عنوان و رشته باید یکی باشن؛ برای رشته‌های دارای جزئیات دستی (غیرخودرویی) جزئیات هم باید یکی باشه
     const isSameIncident = (i, c) => i.title === typeLabelForCompany(typeObj, c) && (i.line || null) === lineKey &&
       (lineObj && lineObj.customDetail ? (i.line_detail || '') === lineDetail : true);
-    const dup = targetCompanies.find(c => c && openIncidentsFor(c.id).some(i => isSameIncident(i, c)));
+    const dup = targetCompanies.find(c => c && allOpenFor(c.id).some(i => isSameIncident(i, c)));
     if (dup) {
-      const existing = openIncidentsFor(dup.id).find(i => isSameIncident(i, dup));
+      const existing = allOpenFor(dup.id).find(i => isSameIncident(i, dup));
       const warnBox = document.getElementById('incWarnBox');
       warnBox.style.display = 'block';
       warnBox.textContent = '⚠️ شرکت «' + dup.name + '» از قبل قطعی «' + existing.title + (existing.line_detail ? ' - ' + existing.line_detail : '') + '» داره که هنوز وصل نشده (از ' + fmtDateTime(existing.opened_at) + '). اگه مطمئنی، دوباره روی «ثبت قطعی» بزن تا ثبت مجدد بشه.';
@@ -1159,7 +1210,7 @@ async function submitIncident(force) {
       });
       if (firstCreatedId === null) firstCreatedId = created.id;
       // برای قطعی سراسری فقط یک بار توی شیت ثبت می‌شه (نه برای هر شرکت جدا)
-      if (!isNationwide) {
+      if (!isNationwide && !typeObj.noticeOnly) { // تگ‌های نوتیس‌محور توی شیت قطعی‌ها ثبت نمی‌شن
         logToSheet({
           action: 'open',
           id: created.id,
@@ -1199,8 +1250,9 @@ async function submitIncident(force) {
 async function resolveIncident(id, closedAt) {
   const closedBy = session && session.user ? session.user.email : 'نامشخص';
   closedAt = closedAt || new Date();
+  const inc = incidents.find(i => String(i.id) === String(id));
   await closeIncidentRow(id, closedBy, closedAt);
-  logToSheet({ action: 'resolve', id, time: hhmmOf(closedAt), ...faDateParts(closedAt) });
+  if (!isNoticeIncident(inc)) logToSheet({ action: 'resolve', id, time: hhmmOf(closedAt), ...faDateParts(closedAt) });
   await refreshAll();
 }
 
@@ -1308,6 +1360,16 @@ document.addEventListener('click', (e) => {
     resolvingAllTitle = null;
     document.getElementById('resolveSub').textContent = 'مطمئنی این قطعی به وضعیت متصل برمی‌گرده؟';
     prepareResolveModal();
+    document.getElementById('resolveModal').classList.add('open');
+    return;
+  }
+
+  const noticeBtn = e.target.closest('[data-resolve-notice]');
+  if (noticeBtn) {
+    resolvingIncidentId = noticeBtn.getAttribute('data-resolve-notice');
+    resolvingAllTitle = null;
+    document.getElementById('resolveSub').textContent = 'مطمئنی این تگ برای شرکت برداشته بشه؟';
+    prepareResolveModal(true);
     document.getElementById('resolveModal').classList.add('open');
     return;
   }

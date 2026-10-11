@@ -287,6 +287,8 @@
   .line-badge .line-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .line-badge.line-up { background: var(--success-soft); color: var(--success); border: 1.5px solid var(--success); }
   .line-badge.line-down { background: var(--danger-soft); color: var(--danger); border: 1.5px solid var(--danger); padding-inline-end: 5px; }
+  .line-badge.line-down.has-tag { border-radius: 14px; }
+  .line-badge .line-tag { display: block; font-size: 10.5px; font-weight: 700; opacity: .85; overflow: hidden; text-overflow: ellipsis; }
   .line-badge.line-up.clickable { cursor: pointer; }
   .line-badge.line-up.clickable:hover { filter: brightness(1.08); }
 
@@ -1071,14 +1073,17 @@ function renderLineBadgeHtml(company, line) {
   const displayLabel = line.customDetail
     ? incList.map(i => i.line_detail || line.label).join(' و ')
     : line.label;
+  // عنوان قطعی (مثلاً شاهکار / مشکل چاپ) زیر اسم رشته نمایش داده می‌شه تا معلوم باشه قطعی از چه نوعیه
+  const tagTitles = [...new Set(incList.map(i => i.title).filter(Boolean))].join('، ');
   const tooltip = incList.map(i =>
-    (i.reason ? i.reason : 'بدون توضیح') + ' — از ' + fmtDateTime(i.opened_at) + ' (' + fmtDuration(i.opened_at) + ') — ثبت: ' + (i.opened_by || '—')
+    '[' + (i.title || '—') + '] ' + (i.reason ? i.reason : 'بدون توضیح') + ' — از ' + fmtDateTime(i.opened_at) + ' (' + fmtDuration(i.opened_at) + ') — ثبت: ' + (i.opened_by || '—')
   ).join(' | ');
   const resolveButtonsHtml = isOperator()
     ? incList.map(i => '<button class="chip-resolve line-report-btn" data-resolve-incident="' + i.id + '" title="ثبت وصلی' + (i.line_detail ? ' برای ' + escapeHtml(i.line_detail) : '') + '">✓</button>').join('')
     : '';
-  return '<span class="line-badge line-down" title="' + escapeHtml(tooltip) + '">' +
-    '<span class="line-name">' + escapeHtml(displayLabel) + ' ● قطع</span>' +
+  return '<span class="line-badge line-down' + (tagTitles ? ' has-tag' : '') + '" title="' + escapeHtml(tooltip) + '">' +
+    '<span class="line-name">' + escapeHtml(displayLabel) + ' ● قطع' +
+    (tagTitles ? '<small class="line-tag">' + escapeHtml(tagTitles) + '</small>' : '') + '</span>' +
     resolveButtonsHtml +
     '</span>';
 }

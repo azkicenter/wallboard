@@ -234,6 +234,30 @@
     display: flex; align-items: center; justify-content: center; padding: 0;
   }
   .tile-quick-btn:hover { background: var(--accent-soft); color: var(--accent-strong); }
+
+  /* ---------- شرکت غیرفعال + دکمه‌ی پاور ---------- */
+  .company-tile.inactive {
+    background: var(--surface-tint); border-color: var(--line); border-style: dashed;
+    box-shadow: none; animation: none;
+  }
+  .company-tile.inactive .tile-logo-wrap,
+  .company-tile.inactive .tile-name { opacity: .28; filter: grayscale(1); }
+  .tile-inactive-label {
+    font-size: 11.5px; font-weight: 800; color: var(--ink-faint);
+    background: var(--surface-tint); border: 1px dashed var(--line);
+    border-radius: 999px; padding: 3px 12px;
+  }
+  .tile-power-btn {
+    position: absolute; inset-inline-start: 8px; inset-block-start: 8px; z-index: 2;
+    width: 24px; height: 24px; border-radius: 50%; padding: 0; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--success-soft); border: 1.5px solid var(--success); color: var(--success);
+    transition: transform .12s, background .15s, opacity .15s;
+  }
+  .tile-power-btn svg { width: 13px; height: 13px; }
+  .tile-power-btn:hover { transform: scale(1.12); }
+  .tile-power-btn:disabled { opacity: .5; cursor: wait; }
+  .tile-power-btn.off { background: var(--surface-tint); border-color: var(--ink-faint); color: var(--ink-faint); }
   .tile-status { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; width: 100%; min-height: 0; overflow-y: auto; flex-shrink: 0; }
   .tile-status-up { color: var(--success); font-weight: 800; font-size: 16px; letter-spacing: -.01em; }
   .incident-chip {
@@ -530,6 +554,7 @@ const OUTAGE_TYPES = [
   { key: 'vpn',            label: 'مشکل وی‌پی‌ان',         nationwide: false, dynamicPortal: false },
   { key: 'chap',           label: 'مشکل چاپ',              nationwide: false, dynamicPortal: false },
   { key: 'mali',           label: 'ارسال به مالی',         nationwide: false, dynamicPortal: false },
+  { key: 'shahkar',        label: 'شاهکار',                nationwide: false, dynamicPortal: false },
   { key: 'ekhtelaf_nerkh', label: 'اختلاف نرخ',            nationwide: false, dynamicPortal: false, noticeOnly: true }
 ];
 
@@ -792,6 +817,9 @@ function sortCompaniesForDisplay(list) {
   return [...list].sort((a, b) => companyRank(a) - companyRank(b) || a.name.localeCompare(b.name, 'fa'));
 }
 
+// شرکت‌ها به‌صورت پیش‌فرض فعالن؛ فقط وقتی is_active دقیقاً false باشه غیرفعال حساب می‌شه
+function isCompanyActive(c) { return !c || c.is_active !== false; }
+
 // همه‌ی موارد باز یک شرکت (شامل تگ‌های نوتیس‌محور مثل اختلاف نرخ) - فقط برای چک تکراری
 function allOpenFor(companyId) {
   return incidents.filter(i => i.company_id === companyId && i.status === 'open');
@@ -859,6 +887,18 @@ async function closeIncidentRow(id, closedBy, closedAt) {
   }
   const row = demoMode.incidents.find(i => i.id === id);
   if (row) Object.assign(row, patch);
+}
+
+async function setCompanyActive(id, active) {
+  if (CONFIGURED) {
+    const { data, error } = await sb.from('companies').update({ is_active: active }).eq('id', id).select();
+    if (error) throw error;
+    // اگه RLS اجازه‌ی آپدیت نده، supabase خطا نمی‌ده ولی هیچ ردیفی تغییر نمی‌کنه
+    if (!data || data.length === 0) throw new Error('اجازه‌ی تغییر وضعیت شرکت وجود نداره (پالیسی UPDATE روی جدول companies رو چک کن).');
+    return;
+  }
+  const c = demoMode.companies.find(x => x.id === id);
+  if (c) c.is_active = active;
 }
 
 async function refreshAll() {
@@ -970,30 +1010,39 @@ function renderCompanyList() {
   // فقط با رنگ/پالس قرمز و بج رشته‌ها مشخص می‌شن.
   list.innerHTML = '';
   companies.forEach(company => {
-    const open = openIncidentsFor(company.id);
+    const active = isCompanyActive(company);
+    const open = active ? openIncidentsFor(company.id) : [];
     const isDown = open.length > 0;
     const logo = getLogoForCompany(company.name);
     const logoHtml = logo
       ? '<img class="company-logo" src="' + logo + '" alt="' + escapeHtml(company.name) + '">'
       : '<span class="company-logo-fallback">' + escapeHtml((company.name || '؟').charAt(0)) + '</span>';
-    const quickBtnHtml = isOperator()
+    const quickBtnHtml = (isOperator() && active)
       ? '<button class="tile-quick-btn" data-quick-incident="' + company.id + '" title="ثبت قطعی">+</button>'
       : '';
+    // دکمه‌ی پاور فقط برای ادمین، سمت راست کارت
+    const powerBtnHtml = isOperator()
+      ? '<button class="tile-power-btn' + (active ? '' : ' off') + '" data-toggle-company="' + company.id + '" title="' + (active ? 'غیرفعال کردن شرکت' : 'فعال کردن شرکت') + '">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.8 0"/></svg>' +
+        '</button>'
+      : '';
 
-    const lineBadgesHtml = INSURANCE_LINES.map(line => renderLineBadgeHtml(company, line)).join('');
-    const generalChipsHtml = generalOpenIncidentsFor(company.id).map(inc => renderIncidentChipHtml(inc, company)).join('');
+    const lineBadgesHtml = active ? INSURANCE_LINES.map(line => renderLineBadgeHtml(company, line)).join('') : '';
+    const generalChipsHtml = active ? generalOpenIncidentsFor(company.id).map(inc => renderIncidentChipHtml(inc, company)).join('') : '';
+    const inactiveHtml = active ? '' : '<span class="tile-inactive-label">غیرفعال</span>';
     // اگه شرکت لوگو داشته باشه، اسمش زیرش نوشته نمی‌شه (خود لوگو مشخصه)؛
     // فقط برای شرکت‌هایی که هنوز لوگو ندارن (حالت fallback حرف اول)، اسم نمایش داده می‌شه تا قابل‌تشخیص بمونه.
     const nameHtml = logo ? '' : '<span class="tile-name">' + escapeHtml(company.name) + '</span>';
 
     const card = document.createElement('div');
-    card.className = 'company-tile ' + (isDown ? 'down' : 'up');
-    card.title = company.name;
+    card.className = 'company-tile ' + (!active ? 'inactive' : (isDown ? 'down' : 'up'));
+    card.title = company.name + (active ? '' : ' (غیرفعال)');
     card.innerHTML =
+      powerBtnHtml +
       quickBtnHtml +
       '<div class="tile-logo-wrap">' + logoHtml + '</div>' +
       nameHtml +
-      '<div class="tile-status">' + lineBadgesHtml + generalChipsHtml + '</div>';
+      '<div class="tile-status">' + lineBadgesHtml + generalChipsHtml + inactiveHtml + '</div>';
     list.appendChild(card);
   });
 }
@@ -1047,7 +1096,7 @@ function escapeHtml(s) {
 ========================================================== */
 function fillIncidentModalSelectors(preselectCompanyId, preselectLineKey) {
   const compSel = document.getElementById('incCompany');
-  compSel.innerHTML = companies.map(c => '<option value="' + c.id + '">' + c.name + '</option>').join('');
+  compSel.innerHTML = companies.filter(isCompanyActive).map(c => '<option value="' + c.id + '">' + c.name + '</option>').join('');
   if (preselectCompanyId) compSel.value = preselectCompanyId;
 
   const titleSel = document.getElementById('incTitle');
@@ -1167,7 +1216,7 @@ async function submitIncident(force) {
     warnBox.textContent = '⚠️ لطفاً بنویس کدوم رشته‌ی غیرخودرویی قطعه.';
     return;
   }
-  const targetCompanies = isNationwide ? companies : [companies.find(c => c.id === document.getElementById('incCompany').value)];
+  const targetCompanies = isNationwide ? companies.filter(isCompanyActive) : [companies.find(c => c.id === document.getElementById('incCompany').value)];
 
   if (!force) {
     // چک تکراری بودن: عنوان و رشته باید یکی باشن؛ برای رشته‌های دارای جزئیات دستی (غیرخودرویی) جزئیات هم باید یکی باشه
@@ -1343,7 +1392,27 @@ document.getElementById('resolveSubmitBtn').addEventListener('click', async () =
   closeModal('resolveModal');
 });
 
-document.addEventListener('click', (e) => {
+document.addEventListener('click', async (e) => {
+  const powerBtn = e.target.closest('[data-toggle-company]');
+  if (powerBtn) {
+    if (!isOperator()) return;
+    const id = powerBtn.getAttribute('data-toggle-company');
+    const company = companies.find(c => String(c.id) === String(id));
+    if (!company) return;
+    const makeActive = !isCompanyActive(company);
+    if (!makeActive && !confirm('شرکت «' + company.name + '» غیرفعال بشه؟')) return;
+    powerBtn.disabled = true;
+    try {
+      await setCompanyActive(company.id, makeActive);
+      await refreshAll();
+    } catch (err) {
+      console.error('خطا در تغییر وضعیت شرکت:', err);
+      alert('❌ تغییر وضعیت شرکت انجام نشد: ' + (err && (err.message || err.details || err.hint) || err));
+      powerBtn.disabled = false;
+    }
+    return;
+  }
+
   const quickBtn = e.target.closest('[data-quick-incident]');
   if (quickBtn) { openIncidentModal(quickBtn.getAttribute('data-quick-incident')); return; }
 

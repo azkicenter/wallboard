@@ -825,6 +825,16 @@ function sheetCompanyName(c) {
   return SHEET_COMPANY_NAMES[companySlug(c)] || c.name;
 }
 
+// عنوان‌هایی که برای یک شرکت خاص، کارت رو قرمز (و پالس‌دار) نمی‌کنن؛ خود قطعی همچنان با بج/چیپ و تایمر نمایش داده می‌شه
+// کلید = کلید ثابت شرکت (همون slug لوگو)، مقدار = لیست عنوان‌ها. مثلاً شاهکار برای ایران فقط موتورسیکلت کوتاه‌مدت رو درگیر می‌کنه
+const NO_RED_TITLES_BY_COMPANY = {
+  iran: ['شاهکار']
+};
+function isRedIncidentFor(company, inc) {
+  const skip = NO_RED_TITLES_BY_COMPANY[companySlug(company)];
+  return !(skip && skip.includes(inc.title));
+}
+
 function companyRank(c) {
   const idx = COMPANY_DISPLAY_ORDER.indexOf(companySlug(c));
   return idx === -1 ? 999 : idx;
@@ -1032,7 +1042,7 @@ function renderCompanyList() {
   companies.forEach(company => {
     const active = isCompanyActive(company);
     const open = active ? openIncidentsFor(company.id) : [];
-    const isDown = open.length > 0;
+    const isDown = open.some(inc => isRedIncidentFor(company, inc));
     const logo = getLogoForCompany(company.name);
     const logoHtml = logo
       ? '<img class="company-logo" src="' + logo + '" alt="' + escapeHtml(company.name) + '">'

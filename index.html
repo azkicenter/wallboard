@@ -287,7 +287,8 @@
   .line-badge .line-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .line-badge.line-up { background: var(--success-soft); color: var(--success); border: 1.5px solid var(--success); }
   .line-badge.line-down { background: var(--danger-soft); color: var(--danger); border: 1.5px solid var(--danger); padding-inline-end: 5px; }
-  .line-badge.line-down.has-tag { border-radius: 14px; }
+  .line-badge.line-down.has-tag { border-radius: 14px; justify-content: center; }
+  .line-badge.line-down .line-name { text-align: center; }
   .line-badge .line-tag { display: block; font-size: 10.5px; font-weight: 700; opacity: .85; overflow: hidden; text-overflow: ellipsis; }
   .line-badge .line-sub { display: flex; align-items: center; justify-content: center; gap: 5px; flex-wrap: wrap; }
   .line-badge .chip-timer {
@@ -830,7 +831,10 @@ function companyRank(c) {
 }
 
 function sortCompaniesForDisplay(list) {
-  return [...list].sort((a, b) => companyRank(a) - companyRank(b) || a.name.localeCompare(b.name, 'fa'));
+  // شرکت‌های غیرفعال میان آخر لیست؛ بین هر گروه (فعال / غیرفعال) ترتیب ثابت قبلی حفظ می‌شه
+  return [...list].sort((a, b) =>
+    (isCompanyActive(a) ? 0 : 1) - (isCompanyActive(b) ? 0 : 1) ||
+    companyRank(a) - companyRank(b) || a.name.localeCompare(b.name, 'fa'));
 }
 
 // شرکت‌ها به‌صورت پیش‌فرض فعالن؛ فقط وقتی is_active دقیقاً false باشه غیرفعال حساب می‌شه

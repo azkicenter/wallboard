@@ -199,6 +199,8 @@
     background: var(--danger-soft); border: 1px solid var(--danger); border-radius: var(--radius);
     padding: 14px 18px; margin-bottom: 16px;
   }
+  .nationwide-banner.warn { background: var(--amber-soft); border-color: var(--amber); }
+  .nationwide-banner.warn .txt { color: var(--amber); }
   .nationwide-banner .txt { display: flex; align-items: center; gap: 10px; font-size: 13.5px; font-weight: 700; color: var(--danger); }
 
   /* ---------- admin notice (تگ‌های نوتیس‌محور مثل اختلاف نرخ) ---------- */
@@ -240,6 +242,15 @@
     background: linear-gradient(150deg, var(--danger-soft) 0%, var(--surface) 70%);
     border-color: var(--danger);
     animation: tile-pulse-danger 2.1s ease-in-out infinite;
+  }
+  .company-tile.warn {
+    background: linear-gradient(150deg, var(--amber-soft) 0%, var(--surface) 70%);
+    border-color: var(--amber);
+    animation: tile-pulse-warn 2.4s ease-in-out infinite;
+  }
+  @keyframes tile-pulse-warn {
+    0%, 100% { box-shadow: var(--shadow-card), 0 0 0 0 rgba(224,138,23,.35); }
+    50% { box-shadow: var(--shadow-card), 0 0 0 5px rgba(224,138,23,0); }
   }
   @keyframes tile-pulse-danger {
     0%, 100% { box-shadow: var(--shadow-card), 0 0 0 0 rgba(224,69,63,.35); }
@@ -292,6 +303,7 @@
     background: var(--danger-soft); color: var(--danger); border: 1.5px solid var(--danger);
     border-radius: 14px; padding: 5px 6px 5px 9px; font-size: 12px; font-weight: 800; max-width: 100%;
   }
+  .incident-chip.warn { background: var(--amber-soft); color: var(--amber); border-color: var(--amber); }
   .incident-chip .chip-label {
     white-space: normal; overflow-wrap: break-word; text-align: center; flex: 1 1 auto; min-width: 0;
   }
@@ -314,6 +326,7 @@
   .line-badge .line-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .line-badge.line-up { background: var(--success-soft); color: var(--success); border: 1.5px solid var(--success); }
   .line-badge.line-down { background: var(--danger-soft); color: var(--danger); border: 1.5px solid var(--danger); padding-inline-end: 5px; }
+  .line-badge.line-down.line-warn { background: var(--amber-soft); color: var(--amber); border-color: var(--amber); }
   .line-badge.line-down.has-tag { border-radius: 14px; justify-content: center; }
   .line-badge.line-down .line-name { text-align: center; }
   .line-badge .line-tag { display: block; font-size: 10.5px; font-weight: 700; opacity: .85; overflow: hidden; text-overflow: ellipsis; }
@@ -605,13 +618,16 @@ const OUTAGE_TYPES = [
   { key: 'shahkar',        label: 'شاهکار',                nationwide: false, dynamicPortal: false },
   { key: 'ekhtelaf_nerkh', label: 'اختلاف نرخ',            nationwide: false, dynamicPortal: false, noticeOnly: true },
   /* عنوان «اختلال» با زیرمنو - داخل منوی انتخاب عنوان به‌صورت گروه (optgroup) نمایش داده می‌شه */
-  { key: 'ekhtelal_mali',  label: 'اختلال ارسال به مالی',  group: 'اختلال', shortLabel: 'ارسال به مالی',  nationwide: true, dynamicPortal: false },
-  { key: 'ekhtelal_amlak', label: 'اختلال املاک و اسکان',  group: 'اختلال', shortLabel: 'املاک و اسکان',  nationwide: true, dynamicPortal: false }
+  { key: 'ekhtelal_mali',  label: 'اختلال ارسال به مالی',  group: 'اختلال', shortLabel: 'ارسال به مالی',  soft: true, nationwide: true, dynamicPortal: false },
+  { key: 'ekhtelal_amlak', label: 'اختلال املاک و اسکان',  group: 'اختلال', shortLabel: 'املاک و اسکان',  soft: true, nationwide: true, dynamicPortal: false }
 ];
 
 /* عنوان‌هایی که «قطعی» حساب نمی‌شن: وضعیت شرکت رو قرمز نمی‌کنن، توی وال‌برد عمومی دیده نمی‌شن،
    توی گوگل‌شیت لاگ نمی‌شن و فقط به‌صورت نوتیس بالای صفحه برای ادمین نمایش داده می‌شن */
 const NOTICE_ONLY_TITLES = OUTAGE_TYPES.filter(t => t.noticeOnly).map(t => t.label);
+/* عنوان‌های «اختلال» (soft): کارت و بج زرد می‌شن و به‌جای «قطع» عبارت «اختلال» نمایش داده می‌شه */
+const SOFT_TITLES = OUTAGE_TYPES.filter(t => t.soft).map(t => t.label);
+function isSoftIncident(i) { return !!i && SOFT_TITLES.includes(i.title); }
 function isNoticeIncident(i) { return !!i && NOTICE_ONLY_TITLES.includes(i.title); }
 
 /* رشته‌های بیمه‌ای که وضعیت اتصال‌شون به‌صورت جدا برای هر شرکت نمایش داده می‌شه */
@@ -1019,6 +1035,7 @@ const NO_RED_TITLES_BY_COMPANY = {
   iran: ['شاهکار']
 };
 function isRedIncidentFor(company, inc) {
+  if (isSoftIncident(inc)) return false; // «اختلال» قرمز نمی‌شه، زرد حساب می‌شه
   const skip = NO_RED_TITLES_BY_COMPANY[companySlug(company)];
   return !(skip && skip.includes(inc.title));
 }
@@ -1207,9 +1224,11 @@ function renderNationwideBanners() {
     const openForTitle = incidents.filter(i => i.status === 'open' && i.title === title && i.is_nationwide);
     if (openForTitle.length === 0) return;
     const el = document.createElement('div');
-    el.className = 'nationwide-banner';
+    const tObj = OUTAGE_TYPES.find(t => t.label === title) || {};
+    const soft = !!tObj.soft;
+    el.className = 'nationwide-banner' + (soft ? ' warn' : '');
     el.innerHTML =
-      '<div class="txt">🔴 قطعی سراسری «' + title + '» فعاله — ' + openForTitle.length + ' شرکت درگیر (از ' + fmtDateTime(openForTitle[openForTitle.length - 1].opened_at) + ')</div>' +
+      '<div class="txt">' + (soft ? '🟡 اختلال سراسری «' + (tObj.shortLabel || title) + '»' : '🔴 قطعی سراسری «' + title + '»') + ' فعاله — ' + openForTitle.length + ' شرکت درگیر (از ' + fmtDateTime(openForTitle[openForTitle.length - 1].opened_at) + ')</div>' +
       (isOperator() ? '<button class="btn btn-success btn-sm" data-resolve-all-title="' + title + '">ثبت وصلی برای همه</button>' : '');
     wrap.appendChild(el);
   });
@@ -1253,7 +1272,8 @@ function renderCompanyList() {
     const nameHtml = logo ? '' : '<span class="tile-name">' + escapeHtml(company.name) + '</span>';
 
     const card = document.createElement('div');
-    card.className = 'company-tile ' + (!active ? 'inactive' : (isDown ? 'down' : 'up'));
+    const isWarn = !isDown && open.some(isSoftIncident);
+    card.className = 'company-tile ' + (!active ? 'inactive' : (isDown ? 'down' : (isWarn ? 'warn' : 'up')));
     card.title = company.name + (active ? '' : ' (غیرفعال)');
     card.innerHTML =
       powerBtnHtml +
@@ -1292,8 +1312,9 @@ function renderLineBadgeHtml(company, line) {
   // تایمر از قدیمی‌ترین قطعیِ باز همین رشته حساب می‌شه (یعنی رشته از کی قطع بوده)
   const oldestOpenedAt = incList.map(i => i.opened_at).filter(Boolean).sort()[0];
   const timerHtml = oldestOpenedAt ? '<span class="chip-timer">⏱ ' + fmtTimer(oldestOpenedAt) + '</span>' : '';
-  return '<span class="line-badge line-down has-tag" title="' + escapeHtml(tooltip) + '">' +
-    '<span class="line-name">' + escapeHtml(displayLabel) + ' ● قطع' +
+  const allSoft = incList.every(isSoftIncident);
+  return '<span class="line-badge line-down has-tag' + (allSoft ? ' line-warn' : '') + '" title="' + escapeHtml(tooltip) + '">' +
+    '<span class="line-name">' + escapeHtml(displayLabel) + (allSoft ? ' ● اختلال' : ' ● قطع') +
     '<span class="line-sub">' +
     (tagTitles ? '<small class="line-tag">' + escapeHtml(tagTitles) + '</small>' : '') + timerHtml +
     '</span></span>' +
@@ -1306,7 +1327,7 @@ function renderIncidentChipHtml(inc, company) {
     (t.dynamicPortal && inc.title === typeLabelForCompany(t, company)));
   const label = typeObj ? typeLabelForCompany(typeObj, company) : inc.title;
   const tooltip = (inc.reason ? inc.reason : 'بدون توضیح') + ' — از ' + fmtDateTime(inc.opened_at) + ' (' + fmtDuration(inc.opened_at) + ') — ثبت: ' + (inc.opened_by || '—');
-  return '<span class="incident-chip" title="' + escapeHtml(tooltip) + '">' +
+  return '<span class="incident-chip' + (isSoftIncident(inc) ? ' warn' : '') + '" title="' + escapeHtml(tooltip) + '">' +
     '<span class="chip-label">' + escapeHtml(label) + '</span>' +
     '<span class="chip-timer">⏱ ' + fmtTimer(inc.opened_at) + '</span>' +
     (isOperator() ? '<button class="chip-resolve" data-resolve-incident="' + inc.id + '" title="ثبت وصلی">✓</button>' : '') +

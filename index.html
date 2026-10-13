@@ -603,7 +603,10 @@ const OUTAGE_TYPES = [
   { key: 'chap',           label: 'مشکل چاپ',              nationwide: false, dynamicPortal: false },
   { key: 'mali',           label: 'ارسال به مالی',         nationwide: true,  dynamicPortal: false },
   { key: 'shahkar',        label: 'شاهکار',                nationwide: false, dynamicPortal: false },
-  { key: 'ekhtelaf_nerkh', label: 'اختلاف نرخ',            nationwide: false, dynamicPortal: false, noticeOnly: true }
+  { key: 'ekhtelaf_nerkh', label: 'اختلاف نرخ',            nationwide: false, dynamicPortal: false, noticeOnly: true },
+  /* عنوان «اختلال» با زیرمنو - داخل منوی انتخاب عنوان به‌صورت گروه (optgroup) نمایش داده می‌شه */
+  { key: 'ekhtelal_mali',  label: 'اختلال ارسال به مالی',  group: 'اختلال', shortLabel: 'ارسال به مالی',  nationwide: true, dynamicPortal: false },
+  { key: 'ekhtelal_amlak', label: 'اختلال املاک و اسکان',  group: 'اختلال', shortLabel: 'املاک و اسکان',  nationwide: true, dynamicPortal: false }
 ];
 
 /* عنوان‌هایی که «قطعی» حساب نمی‌شن: وضعیت شرکت رو قرمز نمی‌کنن، توی وال‌برد عمومی دیده نمی‌شن،
@@ -1317,13 +1320,21 @@ function escapeHtml(s) {
 /* ==========================================================
    INCIDENT MODAL LOGIC
 ========================================================== */
+const ALL_COMPANIES_VALUE = '__all__';
+
 function fillIncidentModalSelectors(preselectCompanyId, preselectLineKey) {
   const compSel = document.getElementById('incCompany');
-  compSel.innerHTML = companies.filter(isCompanyActive).map(c => '<option value="' + c.id + '">' + c.name + '</option>').join('');
+  compSel.innerHTML = '<option value="' + ALL_COMPANIES_VALUE + '">تمام شرکت‌ها</option>' +
+    companies.filter(isCompanyActive).map(c => '<option value="' + c.id + '">' + c.name + '</option>').join('');
   if (preselectCompanyId) compSel.value = preselectCompanyId;
 
   const titleSel = document.getElementById('incTitle');
-  titleSel.innerHTML = OUTAGE_TYPES.map(t => '<option value="' + t.key + '">' + t.label + '</option>').join('');
+  const titleOpt = t => '<option value="' + t.key + '">' + (t.group ? t.shortLabel : t.label) + '</option>';
+  let titleHtml = OUTAGE_TYPES.filter(t => !t.group).map(titleOpt).join('');
+  [...new Set(OUTAGE_TYPES.filter(t => t.group).map(t => t.group))].forEach(g => {
+    titleHtml += '<optgroup label="' + g + '">' + OUTAGE_TYPES.filter(t => t.group === g).map(titleOpt).join('') + '</optgroup>';
+  });
+  titleSel.innerHTML = titleHtml;
 
   const lineSel = document.getElementById('incLine');
   lineSel.innerHTML = '<option value="">— عمومی (مختص یک رشته‌ی خاص نیست)</option>' +
@@ -1431,7 +1442,8 @@ function buildOpenedAt(timeStr, dateStr) {
 async function submitIncident(force) {
   const titleKey = document.getElementById('incTitle').value;
   const typeObj = OUTAGE_TYPES.find(t => t.key === titleKey);
-  const isNationwide = typeObj.nationwide && document.getElementById('incNationwide').checked;
+  const allCompaniesSelected = document.getElementById('incCompany').value === ALL_COMPANIES_VALUE;
+  const isNationwide = typeObj.nationwide && (document.getElementById('incNationwide').checked || allCompaniesSelected);
   const reason = document.getElementById('incReason').value.trim();
   const lineKey = typeObj.noticeOnly ? null : (document.getElementById('incLine').value || null);
   const lineObj = INSURANCE_LINES.find(l => l.key === lineKey);
@@ -1442,7 +1454,7 @@ async function submitIncident(force) {
     warnBox.textContent = '⚠️ لطفاً بنویس کدوم رشته‌ی غیرخودرویی قطعه.';
     return;
   }
-  const targetCompanies = isNationwide ? companies.filter(isCompanyActive) : [companies.find(c => c.id === document.getElementById('incCompany').value)];
+  const targetCompanies = (isNationwide || allCompaniesSelected) ? companies.filter(isCompanyActive) : [companies.find(c => c.id === document.getElementById('incCompany').value)];
 
   if (!force) {
     // چک تکراری بودن: عنوان و رشته باید یکی باشن؛ برای رشته‌های دارای جزئیات دستی (غیرخودرویی) جزئیات هم باید یکی باشه

@@ -337,6 +337,16 @@
 
 
   .live-refresh { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--ink-faint); }
+  .login-hover { position: relative; display: inline-flex; align-items: center; padding: 6px 4px; cursor: default; outline: none; }
+  .login-pop {
+    position: absolute; top: 100%; left: 50%; transform: translate(-50%, -4px); padding-top: 6px; z-index: 40;
+    opacity: 0; visibility: hidden; transition: opacity .15s ease, transform .15s ease, visibility .15s;
+  }
+  .login-hover:hover .login-pop, .login-hover:focus-within .login-pop, .login-hover.open .login-pop {
+    opacity: 1; visibility: visible; transform: translate(-50%, 0);
+  }
+  .login-hover.logged-in .login-pop { display: none; }
+  .login-pop .btn { white-space: nowrap; box-shadow: var(--shadow-card); }
   .live-refresh .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); animation: dot-blink-success 1.8s ease-in-out infinite; }
 
   @media (max-width: 620px) {
@@ -354,11 +364,13 @@
   <header class="topbar">
     <div class="brand"><span class="brand-dot"></span> وضعیت اتصال شرکت‌ها</div>
     <div class="who">
-      <span class="live-refresh"><span class="dot"></span> <span id="lastUpdateTxt">در حال بارگذاری…</span></span>
+      <span class="login-hover" id="loginHover" tabindex="0">
+        <span class="live-refresh"><span class="dot"></span> <span id="lastUpdateTxt">--:--</span></span>
+        <span class="login-pop"><button id="loginBtn" class="btn btn-primary btn-sm">ورود اپراتور</button></span>
+      </span>
       <span id="viewersChip" class="user-chip" style="display:none;" title="تعداد بینندگان آنلاین وال‌برد (هر تب مرورگر یک بیننده)">👁 <span id="viewersCount">0</span></span>
       <span id="operatorChip" class="user-chip" style="display:none;">👤 <span id="operatorEmail"></span></span>
       <button id="logoutBtn" class="logout-link" style="display:none;">خروج</button>
-      <button id="loginBtn" class="btn btn-ghost btn-sm">ورود اپراتور</button>
     </div>
   </header>
 </div>
@@ -1030,7 +1042,7 @@ async function setCompanyActive(id, active) {
 async function refreshAll() {
   companies = sortCompaniesForDisplay(await loadCompanies());
   incidents = await loadIncidents();
-  document.getElementById('lastUpdateTxt').textContent = 'آخرین به‌روزرسانی: ' + new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' });
+  document.getElementById('lastUpdateTxt').textContent = new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
   render();
 }
 
@@ -1088,7 +1100,7 @@ function renderViewers() {
 
 function renderTopbar() {
   renderViewers();
-  document.getElementById('loginBtn').style.display = isLoggedIn() ? 'none' : 'inline-block';
+  document.getElementById('loginHover').classList.toggle('logged-in', isLoggedIn());
   document.getElementById('logoutBtn').style.display = isLoggedIn() ? 'inline-flex' : 'none';
   document.getElementById('operatorChip').style.display = isLoggedIn() ? 'inline-flex' : 'none';
   if (isLoggedIn()) document.getElementById('operatorEmail').textContent = session.user.email + (isOperator() ? '' : ' (مشاهده‌گر)');
@@ -1473,7 +1485,15 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
 /* ==========================================================
    EVENT WIRING
 ========================================================== */
+document.getElementById('loginHover').addEventListener('click', (e) => {
+  if (!e.target.closest('#loginBtn')) document.getElementById('loginHover').classList.toggle('open');
+});
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#loginHover')) document.getElementById('loginHover').classList.remove('open');
+});
+
 document.getElementById('loginBtn').addEventListener('click', () => {
+  document.getElementById('loginHover').classList.remove('open');
   document.getElementById('loginError').style.display = 'none';
   document.getElementById('loginEmail').value = '';
   document.getElementById('loginPassword').value = '';

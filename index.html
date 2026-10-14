@@ -29,15 +29,6 @@
   }
 })();
 </script>
-<script>
-  (function () {
-    try {
-      var saved = localStorage.getItem('wallboardTheme');
-      var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-      document.documentElement.setAttribute('data-theme', theme);
-    } catch (e) {}
-  })();
-</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -71,30 +62,6 @@
     --font: 'Vazirmatn', Tahoma, sans-serif;
     --topbar-bg: rgba(255,255,255,.4);
   }
-  html[data-theme="dark"] {
-    --bg: transparent;
-    --surface: rgba(255,255,255,.07);
-    --surface-tint: rgba(255,255,255,.04);
-    --ink: #EAF0FB;
-    --ink-soft: rgba(234,240,251,.68);
-    --ink-faint: rgba(234,240,251,.44);
-    --line: rgba(255,255,255,.14);
-    --accent: #17A9FF;
-    --accent-deep: #4C8DFF;
-    --accent-soft: rgba(23,169,255,.22);
-    --accent-strong: #3AA0FF;
-    --danger: #FF6B64;
-    --danger-soft: rgba(255,107,100,.18);
-    --success: #34C98C;
-    --success-soft: rgba(52,201,140,.18);
-    --amber: #F2A93B;
-    --amber-soft: rgba(242,169,59,.18);
-    --violet: #9C87F0;
-    --violet-soft: rgba(156,135,240,.2);
-    --shadow-card: 0 8px 32px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.08);
-    --shadow-float: 0 24px 60px -16px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.1);
-    --topbar-bg: rgba(10,15,28,.22);
-  }
 
   * { box-sizing: border-box; }
   html, body { height: 100%; overflow: hidden; }
@@ -119,15 +86,6 @@
       linear-gradient(160deg, #CDE8FF 0%, #EAF4FE 45%, #FFFFFF 100%);
     background-attachment: fixed;
     animation: glow-shift 24s ease-in-out infinite;
-  }
-  html[data-theme="dark"] .bg-glow {
-    background:
-      radial-gradient(620px 520px at 12% -8%, rgba(23,169,255,.32), transparent 60%),
-      radial-gradient(680px 540px at 106% 6%, rgba(76,141,255,.28), transparent 60%),
-      radial-gradient(700px 560px at 88% 102%, rgba(156,135,240,.26), transparent 60%),
-      radial-gradient(640px 520px at 4% 104%, rgba(52,201,140,.2), transparent 60%),
-      linear-gradient(135deg, #05070f 0%, #060a16 55%, #04070d 100%);
-    background-attachment: fixed;
   }
   @keyframes glow-shift {
     0%, 100% { filter: saturate(1) hue-rotate(0deg); }
@@ -253,12 +211,6 @@
   }
   .tile-logo-wrap { flex: 1; width: 100%; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
   .company-logo { width: 100%; height: 100%; object-fit: contain; }
-  html[data-theme="dark"] .tile-logo-wrap {
-    background: linear-gradient(160deg, #ffffff 0%, #eef2f8 100%);
-    border-radius: 14px;
-    box-shadow: 0 6px 18px rgba(0,0,0,.38), 0 0 0 1px rgba(255,255,255,.55);
-  }
-  html[data-theme="dark"] .company-logo { box-sizing: border-box; padding: 6px 12px; }
   .company-logo-fallback {
     width: 70%; height: 70%; max-width: 90px; max-height: 90px; border-radius: 14px;
     background: var(--accent-soft); color: var(--accent-strong);
@@ -383,18 +335,6 @@
   .modal-card { position: relative; }
   .field-error { color: var(--danger); font-size: 12px; margin-top: 6px; display: none; }
 
-  /* ---------- theme toggle ---------- */
-  .theme-toggle {
-    position: fixed; bottom: 16px; left: 16px; z-index: 30; width: 42px; height: 42px; border-radius: 50%;
-    background: var(--surface); -webkit-backdrop-filter: blur(14px) saturate(180%); backdrop-filter: blur(14px) saturate(180%);
-    border: 1px solid var(--line); box-shadow: var(--shadow-card); display: flex; align-items: center; justify-content: center;
-    cursor: pointer; color: var(--ink);
-  }
-  .theme-toggle svg { width: 20px; height: 20px; }
-  .theme-toggle .icon-sun { display: none; }
-  .theme-toggle .icon-moon { display: block; }
-  html[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
-  html[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
 
   .live-refresh { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--ink-faint); }
   .live-refresh .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); animation: dot-blink-success 1.8s ease-in-out infinite; }
@@ -550,10 +490,6 @@
   </div>
 </div>
 
-<button class="theme-toggle" id="themeToggle" title="تغییر پوسته">
-  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
-  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-</button>
 
 <script>
 const CONFIG = {
@@ -1659,14 +1595,6 @@ document.addEventListener('click', async (e) => {
     document.getElementById('resolveModal').classList.add('open');
     return;
   }
-});
-
-document.getElementById('themeToggle').addEventListener('click', () => {
-  const html = document.documentElement;
-  const cur = html.getAttribute('data-theme');
-  const next = cur === 'dark' ? 'light' : 'dark';
-  html.setAttribute('data-theme', next);
-  try { localStorage.setItem('wallboardTheme', next); } catch (e) {}
 });
 
 /* ==========================================================

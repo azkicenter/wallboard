@@ -999,7 +999,7 @@ async function loadCompanies() {
 
 async function loadIncidents() {
   if (CONFIGURED) {
-    const { data, error } = await sb.from('incidents').select('*').order('opened_at', { ascending: false });
+    const { data, error } = await sb.from('incidents').select('*').eq('status', 'open').order('opened_at', { ascending: false });
     if (error) { console.error(error); return []; }
     return data;
   }
@@ -1039,7 +1039,9 @@ async function setCompanyActive(id, active) {
   if (c) c.is_active = active;
 }
 
+let lastFullRefresh = 0;
 async function refreshAll() {
+  lastFullRefresh = Date.now();
   companies = sortCompaniesForDisplay(await loadCompanies());
   incidents = await loadIncidents();
   document.getElementById('lastUpdateTxt').textContent = new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
@@ -1620,11 +1622,45 @@ document.addEventListener('click', async (e) => {
 /* ==========================================================
    REALTIME
 ========================================================== */
+function applyIncidentChange(payload) {
+  if (payload.eventType === 'DELETE') {
+    const id = payload.old && payload.old.id;
+    incidents = incidents.filter(i => String(i.id) !== String(id));
+  } else {
+    const row = payload.new;
+    const rest = incidents.filter(i => String(i.id) !== String(row.id));
+    incidents = row.status === 'open' ? [row, ...rest] : rest;
+    incidents.sort((a, b) => (new Date(b.opened_at) || 0) - (new Date(a.opened_at) || 0));
+  }
+  render();
+}
+
+function applyCompanyChange(payload) {
+  if (payload.eventType === 'DELETE') {
+    const id = payload.old && payload.old.id;
+    companies = companies.filter(c => String(c.id) !== String(id));
+  } else {
+    const row = payload.new;
+    const idx = companies.findIndex(c => String(c.id) === String(row.id));
+    if (idx >= 0) companies[idx] = row; else companies.push(row);
+    companies = sortCompaniesForDisplay(companies);
+  }
+  render();
+}
+
 function subscribeRealtime() {
   if (!CONFIGURED) return;
-  sb.channel('incidents-changes')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'incidents' }, () => { refreshAll(); })
-    .subscribe();
+  let subscribedBefore = false;
+  sb.channel('wall-data-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'incidents' }, applyIncidentChange)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'companies' }, applyCompanyChange)
+    .subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        // بعد از قطع و وصل شدن دوباره، یک بار کامل بگیر تا چیزی از دست نره
+        if (subscribedBefore) refreshAll();
+        subscribedBefore = true;
+      }
+    });
 
   const viewerKey = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.random();
   const presenceCh = sb.channel('wallboard-presence', { config: { presence: { key: viewerKey } } });
@@ -1659,7 +1695,12 @@ async function init() {
   }
 
   await refreshAll();
-  setInterval(refreshAll, 30000);
+  // شبکه‌ی اطمینان: هر ۵ دقیقه، فقط وقتی تب دیده می‌شه
+  setInterval(() => { if (!document.hidden) refreshAll(); }, 5 * 60 * 1000);
+  // وقتی تب دوباره دیده شد و بیشتر از ۱ دقیقه از آخرین دریافت گذشته بود
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && Date.now() - lastFullRefresh > 60000) refreshAll();
+  });
   setInterval(render, 1000);
 }
 

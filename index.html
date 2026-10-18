@@ -355,6 +355,25 @@
     .company-list { overflow-y: auto; }
     .company-tile { flex-basis: 130px; }
   }
+
+  /* ===== Compact admin notices (tag cards): side by side, smaller ===== */
+  #adminNotices { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 8px; margin-bottom: 10px; }
+  #adminNotices:empty { display: none; }
+  #adminNotices .admin-notice { margin-bottom: 0; padding: 6px 12px; gap: 8px; flex-wrap: nowrap; border-radius: 10px; }
+  #adminNotices .admin-notice .txt { font-size: 12px; line-height: 1.5; min-width: 0; }
+  #adminNotices .admin-notice .txt small { font-size: 11px; }
+  #adminNotices .admin-notice .btn-sm { padding: 3px 10px; font-size: 11.5px; flex-shrink: 0; }
+  @media (max-width: 620px) { #adminNotices { grid-template-columns: 1fr; } }
+
+  /* ===== Auto-fit zoom =====
+     --page-zoom is computed by the script at the bottom of the page: the largest zoom
+     at which every card fits on screen without scrolling (like Ctrl+/- in Chrome). */
+  body {
+    zoom: var(--page-zoom, 1);
+    height: calc(100vh / var(--page-zoom, 1));   /* vh is scaled by zoom too; compensate */
+  }
+  .modal-card { max-height: calc(88vh / var(--page-zoom, 1)); }
+  @media (max-width: 620px) { body { zoom: 1; height: 100vh; } .modal-card { max-height: 88vh; } }
 </style>
 </head>
 <body>
@@ -1705,6 +1724,40 @@ async function init() {
 }
 
 init();
+</script>
+<script>
+/* Auto-fit zoom: find the largest zoom (MIN..MAX) where no card needs scrolling. */
+(function () {
+  var MIN = 0.5, MAX = 2, root = document.documentElement, timer = null, current = 1;
+  function setZoom(z) { root.style.setProperty('--page-zoom', z); current = z; }
+  function overflows(list) { return list.scrollHeight > list.clientHeight + 1; }
+  function fit() {
+    var list = document.getElementById('companyList');
+    if (!list) return;
+    if (window.matchMedia('(max-width: 620px)').matches || !list.querySelector('.company-tile')) { setZoom(1); return; }
+    var lo = MIN, hi = MAX;
+    setZoom(MIN);
+    if (overflows(list)) return;                 // even the minimum doesn't fit: stay at MIN
+    setZoom(MAX);
+    if (!overflows(list)) return;                // everything fits even at MAX
+    for (var i = 0; i < 9; i++) {                // binary search, precision ~0.003
+      var mid = (lo + hi) / 2;
+      setZoom(mid);
+      if (overflows(list)) hi = mid; else lo = mid;
+    }
+    setZoom(Math.floor(lo * 100) / 100);         // largest value that fits
+  }
+  function schedule() { clearTimeout(timer); timer = setTimeout(fit, 150); }
+  window.addEventListener('resize', schedule);
+  window.addEventListener('load', fit);
+  var list = document.getElementById('companyList');
+  if (list) new MutationObserver(schedule).observe(list, { childList: true, subtree: true });
+  ['adminNotices', 'nationwideBanners'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) new MutationObserver(schedule).observe(el, { childList: true, subtree: true });
+  });
+  fit();
+})();
 </script>
 </body>
 </html>

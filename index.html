@@ -1701,9 +1701,12 @@ async function init() {
   document.getElementById('configBanner').style.display = CONFIGURED ? 'none' : 'flex';
 
   if (CONFIGURED) {
+    // کلید ذخیره‌ی نشست به آدرس پروژه وابسته است تا نشست (JWT) پروژه‌ی قبلی با پروژه‌ی جدید قاطی نشود
+    const projectRef = (CONFIG.url.match(/^https?:\/\/([a-z0-9]+)\./i) || [])[1] || 'default';
     sb = window.supabase.createClient(CONFIG.url, CONFIG.anonKey, {
-      auth: { storageKey: 'wallboard-status-auth', persistSession: true, autoRefreshToken: true }
+      auth: { storageKey: 'wallboard-status-auth-' + projectRef, persistSession: true, autoRefreshToken: true }
     });
+    try { localStorage.removeItem('wallboard-status-auth'); } catch (e) {}   // نشست قدیمیِ پروژه‌ی قبلی
     const { data: { session: s } } = await sb.auth.getSession();
     session = s;
     sb.auth.onAuthStateChange((_event, s2) => { session = s2; render(); });

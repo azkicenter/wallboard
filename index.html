@@ -1210,9 +1210,22 @@ function renderCompanyList() {
   });
 }
 
+function portalOutageFor(company) {
+  const t = OUTAGE_TYPES.find(x => x.key === 'fanavaran_portal');
+  if (!t) return null;
+  const title = typeLabelForCompany(t, company);
+  return generalOpenIncidentsFor(company.id).find(i => i.title === title) || null;
+}
+
 function renderLineBadgeHtml(company, line) {
   const incList = openLineIncidentsFor(company.id, line.key);
   if (incList.length === 0) {
+    const portalInc = portalOutageFor(company);
+    if (portalInc) {
+      return '<span class="line-badge line-down" title="' + escapeHtml('به‌دلیل ' + portalInc.title) + '">' +
+        '<span class="line-name">' + escapeHtml(line.label) + ' ● قطع</span>' +
+        '</span>';
+    }
     const clickableAttr = isOperator()
       ? ' data-quick-incident-line="' + company.id + '|' + line.key + '" title="ثبت قطعی برای رشته‌ی ' + escapeHtml(line.label) + '"'
       : '';

@@ -564,7 +564,6 @@ const OUTAGE_TYPES = [
   { key: 'amlak',          label: 'املاک و اسکان',         nationwide: true,  dynamicPortal: false },
   { key: 'bimeh_markazi',  label: 'استعلام بیمه مرکزی',    nationwide: true,  dynamicPortal: false },
   { key: 'fanavaran_portal', label: 'فناوران/پرتال قطع',   nationwide: false, dynamicPortal: true, dynamicWord: 'قطع' },
-  { key: 'fanavaran_portal_disruption', label: 'اختلال فناوران/پرتال', nationwide: false, dynamicPortal: true, dynamicWord: 'اختلال' },
   { key: 'vpn',            label: 'مشکل وی‌پی‌ان',         nationwide: false, dynamicPortal: false },
   { key: 'chap',           label: 'مشکل چاپ',              nationwide: false, dynamicPortal: false },
   { key: 'mali',           label: 'ارسال به مالی',         nationwide: true,  dynamicPortal: false },
@@ -573,11 +572,14 @@ const OUTAGE_TYPES = [
   { key: 'ekhtelal_mali',  label: 'اختلال ارسال به مالی',  group: 'اختلال', shortLabel: 'ارسال به مالی',  soft: true, nationwide: true, dynamicPortal: false },
   { key: 'ekhtelal_amlak', label: 'اختلال املاک و اسکان',  group: 'اختلال', shortLabel: 'املاک و اسکان',  soft: true, nationwide: true, dynamicPortal: false },
   { key: 'ekhtelal_bimeh_markazi', label: 'اختلال استعلام بیمه مرکزی', group: 'اختلال', shortLabel: 'استعلام بیمه مرکزی', soft: true, nationwide: true, dynamicPortal: false },
-  { key: 'ekhtelal_ashkhas', label: 'اختلال استعلام اشخاص', group: 'اختلال', shortLabel: 'استعلام اشخاص', soft: true, nationwide: true, dynamicPortal: false }
+  { key: 'ekhtelal_ashkhas', label: 'اختلال استعلام اشخاص', group: 'اختلال', shortLabel: 'استعلام اشخاص', soft: true, nationwide: true, dynamicPortal: false },
+  { key: 'fanavaran_portal_disruption', label: 'اختلال فناوران/پرتال', group: 'اختلال', shortLabel: 'فناوران / پرتال', soft: true, nationwide: false, dynamicPortal: true, dynamicWord: 'اختلال' }
 ];
 
 const NOTICE_ONLY_TITLES = OUTAGE_TYPES.filter(t => t.noticeOnly).map(t => t.label);
-const SOFT_TITLES = OUTAGE_TYPES.filter(t => t.soft).map(t => t.label);
+const SOFT_TITLES = OUTAGE_TYPES.filter(t => t.soft).flatMap(t => t.dynamicPortal
+  ? [t.label, 'فناوران ' + (t.dynamicWord || 'قطع'), 'پرتال ' + (t.dynamicWord || 'قطع')]
+  : [t.label]);
 function isSoftIncident(i) { return !!i && SOFT_TITLES.includes(i.title); }
 function isNoticeIncident(i) { return !!i && NOTICE_ONLY_TITLES.includes(i.title); }
 

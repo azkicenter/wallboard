@@ -71,6 +71,7 @@
     background: #0c1226;
     color: var(--ink);
     height: 100vh;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
     transition: background .25s ease, color .25s ease;
@@ -131,7 +132,7 @@
   .logout-link:hover { color: var(--danger); }
 
   main {
-    max-width: 1700px; width: 100%; margin: 0 auto;
+    max-width: none; width: 100%; margin: 0 auto;
     padding: 8px 16px 8px;
     position: relative; z-index: 1;
     flex: 1; min-height: 0;
@@ -167,24 +168,29 @@
   .admin-notice .txt { font-size: 13.5px; font-weight: 700; color: var(--amber); line-height: 1.8; }
   .admin-notice .txt small { display: block; font-weight: 500; opacity: .85; }
 
+  /* اندازهٔ کارت‌ها (--tw / --th) و ضریب مقیاس محتوا (--u) را تابع layoutTiles() بر اساس
+     اندازهٔ واقعی صفحه محاسبه می‌کند تا همهٔ کارت‌ها بدون اسکرول جا شوند. */
   .company-list {
+    --u: 1; --tw: 190px; --th: 165px; --gap: 10px;
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    align-content: flex-start;
-    gap: 10px;
-    flex: 1;
+    align-content: center;
+    align-items: stretch;
+    gap: var(--gap);
+    flex: 1 1 0;
     min-height: 0;
-    overflow-y: auto;
+    overflow: hidden;
   }
   .company-tile {
-    flex: 1 1 165px;
-    max-width: 210px;
+    flex: 0 0 auto;
+    width: var(--tw);
+    height: var(--th);
     border-radius: var(--radius);
     border: 1.5px solid var(--line);
-    padding: 10px 10px 12px;
-    display: flex; flex-direction: column; align-items: center; gap: 4px;
-    min-height: 150px; min-width: 0; overflow: hidden;
+    padding: calc(10px * var(--u)) calc(10px * var(--u)) calc(12px * var(--u));
+    display: flex; flex-direction: column; align-items: center; gap: calc(4px * var(--u));
+    min-width: 0; overflow: hidden;
     position: relative;
     box-shadow: var(--shadow-card);
     -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
@@ -209,19 +215,19 @@
     0%, 100% { box-shadow: var(--shadow-card), 0 0 0 0 rgba(224,69,63,.35); }
     50% { box-shadow: var(--shadow-card), 0 0 0 5px rgba(224,69,63,0); }
   }
-  .tile-logo-wrap { flex: 1; width: 100%; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .tile-logo-wrap { flex: 1 1 0; width: 100%; min-height: 20%; display: flex; align-items: center; justify-content: center; overflow: hidden; }
   .company-logo { width: 100%; height: 100%; object-fit: contain; }
   .company-logo-fallback {
-    width: 70%; height: 70%; max-width: 90px; max-height: 90px; border-radius: 14px;
+    width: 70%; height: 70%; max-width: calc(90px * var(--u)); max-height: calc(90px * var(--u)); border-radius: 14px;
     background: var(--accent-soft); color: var(--accent-strong);
-    display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 28px;
+    display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: calc(28px * var(--u));
   }
-  .tile-name { font-size: 14px; font-weight: 800; width: 100%; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0; }
+  .tile-name { font-size: calc(14px * var(--u)); font-weight: 800; width: 100%; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0; }
   .tile-quick-btn {
-    position: absolute; inset-inline-end: 8px; inset-block-start: 8px; z-index: 1;
-    flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
+    position: absolute; inset-inline-end: calc(8px * var(--u)); inset-block-start: calc(8px * var(--u)); z-index: 1;
+    flex-shrink: 0; width: calc(24px * var(--u)); height: calc(24px * var(--u)); border-radius: 50%;
     background: var(--surface-tint); border: 1px solid var(--line); color: var(--ink);
-    font-size: 15px; font-weight: 800; line-height: 1; cursor: pointer;
+    font-size: calc(15px * var(--u)); font-weight: 800; line-height: 1; cursor: pointer;
     display: flex; align-items: center; justify-content: center; padding: 0;
   }
   .tile-quick-btn:hover { background: var(--accent-soft); color: var(--accent-strong); }
@@ -233,27 +239,28 @@
   .company-tile.inactive .tile-logo-wrap,
   .company-tile.inactive .tile-name { opacity: .28; filter: grayscale(1); }
   .tile-inactive-label {
-    font-size: 11.5px; font-weight: 800; color: var(--ink-faint);
+    font-size: calc(11.5px * var(--u)); font-weight: 800; color: var(--ink-faint);
     background: var(--surface-tint); border: 1px dashed var(--line);
-    border-radius: 999px; padding: 3px 12px;
+    border-radius: 999px; padding: calc(3px * var(--u)) calc(12px * var(--u));
   }
   .tile-power-btn {
-    position: absolute; inset-inline-start: 8px; inset-block-start: 8px; z-index: 2;
-    width: 24px; height: 24px; border-radius: 50%; padding: 0; cursor: pointer;
+    position: absolute; inset-inline-start: calc(8px * var(--u)); inset-block-start: calc(8px * var(--u)); z-index: 2;
+    width: calc(24px * var(--u)); height: calc(24px * var(--u)); border-radius: 50%; padding: 0; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     background: var(--success-soft); border: 1.5px solid var(--success); color: var(--success);
     transition: transform .12s, background .15s, opacity .15s;
   }
-  .tile-power-btn svg { width: 13px; height: 13px; }
+  .tile-power-btn svg { width: calc(13px * var(--u)); height: calc(13px * var(--u)); }
   .tile-power-btn:hover { transform: scale(1.12); }
   .tile-power-btn:disabled { opacity: .5; cursor: wait; }
   .tile-power-btn.off { background: var(--surface-tint); border-color: var(--ink-faint); color: var(--ink-faint); }
-  .tile-status { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; width: 100%; min-height: 0; overflow-y: auto; flex-shrink: 0; }
-  .tile-status-up { color: var(--success); font-weight: 800; font-size: 16px; letter-spacing: -.01em; }
+  .tile-status { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(6px * var(--u)); width: 100%; min-height: 0; overflow-y: auto; flex: 0 1 auto; scrollbar-width: none; }
+  .tile-status::-webkit-scrollbar { display: none; }
+  .tile-status-up { color: var(--success); font-weight: 800; font-size: calc(16px * var(--u)); letter-spacing: -.01em; }
   .incident-chip {
-    display: inline-flex; align-items: center; justify-content: center; gap: 5px; flex-wrap: wrap; row-gap: 2px;
+    display: inline-flex; align-items: center; justify-content: center; gap: calc(5px * var(--u)); flex-wrap: wrap; row-gap: calc(2px * var(--u));
     background: var(--danger-soft); color: var(--danger); border: 1.5px solid var(--danger);
-    border-radius: 14px; padding: 5px 6px 5px 9px; font-size: 12px; font-weight: 800; max-width: 100%;
+    border-radius: 14px; padding: calc(5px * var(--u)) calc(6px * var(--u)) calc(5px * var(--u)) calc(9px * var(--u)); font-size: calc(12px * var(--u)); font-weight: 800; max-width: 100%;
   }
   .incident-chip.warn { background: var(--amber-soft); color: var(--amber); border-color: var(--amber); }
   .incident-chip .chip-label {
@@ -261,31 +268,37 @@
   }
   .incident-chip .chip-timer {
     font-variant-numeric: tabular-nums; font-family: 'Courier New', ui-monospace, monospace;
-    font-weight: 700; font-size: 9.5px; letter-spacing: -.02em; flex-shrink: 0;
-    background: rgba(0,0,0,.06); border-radius: 999px; padding: 1px 6px; white-space: nowrap; opacity: .85;
+    font-weight: 700; font-size: calc(9.5px * var(--u)); letter-spacing: -.02em; flex-shrink: 0;
+    background: rgba(0,0,0,.06); border-radius: 999px; padding: calc(1px * var(--u)) calc(6px * var(--u)); white-space: nowrap; opacity: .85;
   }
   .chip-resolve {
     background: var(--success); color: #fff; border: none; border-radius: 50%;
-    width: 21px; height: 21px; font-size: 12.5px; cursor: pointer; flex-shrink: 0;
+    width: calc(21px * var(--u)); height: calc(21px * var(--u)); font-size: calc(12.5px * var(--u)); cursor: pointer; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center; padding: 0; line-height: 1;
   }
 
+  .chip-edit {
+    background: rgba(0,0,0,.10); color: inherit; border: none; border-radius: 50%;
+    width: calc(21px * var(--u)); height: calc(21px * var(--u)); font-size: calc(12px * var(--u)); cursor: pointer; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; padding: 0; line-height: 1;
+  }
+  .chip-edit:hover { background: rgba(0,0,0,.20); }
   .line-badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    border-radius: 999px; padding: 4px 10px; font-size: 12px; font-weight: 800; max-width: 100%;
+    display: inline-flex; align-items: center; gap: calc(6px * var(--u));
+    border-radius: 999px; padding: calc(4px * var(--u)) calc(10px * var(--u)); font-size: calc(12px * var(--u)); font-weight: 800; max-width: 100%;
   }
   .line-badge .line-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .line-badge.line-up { background: var(--success-soft); color: var(--success); border: 1.5px solid var(--success); }
-  .line-badge.line-down { background: var(--danger-soft); color: var(--danger); border: 1.5px solid var(--danger); padding-inline-end: 5px; }
+  .line-badge.line-down { background: var(--danger-soft); color: var(--danger); border: 1.5px solid var(--danger); padding-inline-end: calc(5px * var(--u)); }
   .line-badge.line-down.line-warn { background: var(--amber-soft); color: var(--amber); border-color: var(--amber); }
   .line-badge.line-down.has-tag { border-radius: 14px; justify-content: center; }
   .line-badge.line-down .line-name { text-align: center; }
-  .line-badge .line-tag { display: block; font-size: 10.5px; font-weight: 700; opacity: .85; overflow: hidden; text-overflow: ellipsis; }
-  .line-badge .line-sub { display: flex; align-items: center; justify-content: center; gap: 5px; flex-wrap: wrap; }
+  .line-badge .line-tag { display: block; font-size: calc(10.5px * var(--u)); font-weight: 700; opacity: .85; overflow: hidden; text-overflow: ellipsis; }
+  .line-badge .line-sub { display: flex; align-items: center; justify-content: center; gap: calc(5px * var(--u)); flex-wrap: wrap; }
   .line-badge .chip-timer {
     font-variant-numeric: tabular-nums; font-family: 'Courier New', ui-monospace, monospace;
-    font-weight: 700; font-size: 9.5px; letter-spacing: -.02em; flex-shrink: 0;
-    background: rgba(0,0,0,.06); border-radius: 999px; padding: 1px 6px; white-space: nowrap; opacity: .85;
+    font-weight: 700; font-size: calc(9.5px * var(--u)); letter-spacing: -.02em; flex-shrink: 0;
+    background: rgba(0,0,0,.06); border-radius: 999px; padding: calc(1px * var(--u)) calc(6px * var(--u)); white-space: nowrap; opacity: .85;
   }
   .line-badge.line-up.clickable { cursor: pointer; }
   .line-badge.line-up.clickable:hover { filter: brightness(1.08); }
@@ -352,28 +365,7 @@
   @media (max-width: 620px) {
     header.topbar { padding: 12px 14px; }
     main { padding: 14px 12px 10px; }
-    .company-list { overflow-y: auto; }
-    .company-tile { flex-basis: 130px; }
   }
-
-  /* ===== Compact admin notices (tag cards): side by side, smaller ===== */
-  #adminNotices { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 8px; margin-bottom: 10px; }
-  #adminNotices:empty { display: none; }
-  #adminNotices .admin-notice { margin-bottom: 0; padding: 6px 12px; gap: 8px; flex-wrap: nowrap; border-radius: 10px; }
-  #adminNotices .admin-notice .txt { font-size: 12px; line-height: 1.5; min-width: 0; }
-  #adminNotices .admin-notice .txt small { font-size: 11px; }
-  #adminNotices .admin-notice .btn-sm { padding: 3px 10px; font-size: 11.5px; flex-shrink: 0; }
-  @media (max-width: 620px) { #adminNotices { grid-template-columns: 1fr; } }
-
-  /* ===== Auto-fit zoom =====
-     --page-zoom is computed by the script at the bottom of the page: the largest zoom
-     at which every card fits on screen without scrolling (like Ctrl+/- in Chrome). */
-  body {
-    zoom: var(--page-zoom, 1);
-    height: calc(100vh / var(--page-zoom, 1));   /* vh is scaled by zoom too; compensate */
-  }
-  .modal-card { max-height: calc(88vh / var(--page-zoom, 1)); }
-  @media (max-width: 620px) { body { zoom: 1; height: 100vh; } .modal-card { max-height: 88vh; } }
 </style>
 </head>
 <body>
@@ -387,7 +379,7 @@
         <span class="live-refresh"><span class="dot"></span> <span id="lastUpdateTxt">--:--</span></span>
         <span class="login-pop"><button id="loginBtn" class="btn btn-primary btn-sm">ورود اپراتور</button></span>
       </span>
-      <span id="viewersChip" class="user-chip" style="display:none;" title="تعداد بینندگان آنلاین وال‌برد">👁 <span id="viewersCount">0</span></span>
+      <span id="viewersChip" class="user-chip" style="display:none;" title="تعداد بینندگان آنلاین وال‌برد (هر تب مرورگر یک بیننده)">👁 <span id="viewersCount">0</span></span>
       <span id="operatorChip" class="user-chip" style="display:none;">👤 <span id="operatorEmail"></span></span>
       <button id="logoutBtn" class="logout-link" style="display:none;">خروج</button>
     </div>
@@ -438,8 +430,8 @@
 <div class="modal-overlay" id="incidentModal">
   <div class="modal-card">
     <button class="modal-close-x" data-close="incidentModal">×</button>
-    <h2>ثبت قطعی جدید</h2>
-    <p class="sub">شرکت و نوع قطعی رو انتخاب کن و علتش رو بنویس.</p>
+    <h2 id="incModalTitle">ثبت قطعی جدید</h2>
+    <p class="sub" id="incModalSub">شرکت و نوع قطعی رو انتخاب کن و علتش رو بنویس.</p>
 
     <div class="field">
       <label>عنوان قطعی</label>
@@ -461,7 +453,7 @@
     <div class="field" id="lineFieldWrap">
       <label>رشته</label>
       <select id="incLine" style="width:100%;">
-        <option value="">— عمومی (مختص یک رشته‌ی خاص نیست)</option>
+        <option value="">— همه‌ی رشته‌ها (عمومی)</option>
       </select>
     </div>
 
@@ -524,8 +516,8 @@
 
 <script>
 const CONFIG = {
-  url: 'https://tuvcjofjoriyznookwuz.supabase.co',
-  anonKey: 'sb_publishable_2uJx4JRG9o7AruVr7GJOTA_PVcDAhoP'
+  url: 'https://hbiygeecakpgjnfieyyt.supabase.co',
+  anonKey: 'sb_publishable__MGWCrgYYtyMFFQ9NjK5XQ_Ps-emOHk'
 };
 
 const SHEET_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbw0z0yOt7id0OyNLxiboCqVz6tZlOHktman26jshzAefTQdLqmPurlzIFFaG0Gc8vZM/exec';
@@ -564,6 +556,7 @@ const OUTAGE_TYPES = [
   { key: 'amlak',          label: 'املاک و اسکان',         nationwide: true,  dynamicPortal: false },
   { key: 'bimeh_markazi',  label: 'استعلام بیمه مرکزی',    nationwide: true,  dynamicPortal: false },
   { key: 'fanavaran_portal', label: 'فناوران/پرتال قطع',   nationwide: false, dynamicPortal: true, dynamicWord: 'قطع' },
+  { key: 'fanavaran_portal_disruption', label: 'اختلال فناوران/پرتال', nationwide: false, dynamicPortal: true, dynamicWord: 'اختلال' },
   { key: 'vpn',            label: 'مشکل وی‌پی‌ان',         nationwide: false, dynamicPortal: false },
   { key: 'chap',           label: 'مشکل چاپ',              nationwide: false, dynamicPortal: false },
   { key: 'mali',           label: 'ارسال به مالی',         nationwide: true,  dynamicPortal: false },
@@ -572,14 +565,11 @@ const OUTAGE_TYPES = [
   { key: 'ekhtelal_mali',  label: 'اختلال ارسال به مالی',  group: 'اختلال', shortLabel: 'ارسال به مالی',  soft: true, nationwide: true, dynamicPortal: false },
   { key: 'ekhtelal_amlak', label: 'اختلال املاک و اسکان',  group: 'اختلال', shortLabel: 'املاک و اسکان',  soft: true, nationwide: true, dynamicPortal: false },
   { key: 'ekhtelal_bimeh_markazi', label: 'اختلال استعلام بیمه مرکزی', group: 'اختلال', shortLabel: 'استعلام بیمه مرکزی', soft: true, nationwide: true, dynamicPortal: false },
-  { key: 'ekhtelal_ashkhas', label: 'اختلال استعلام اشخاص', group: 'اختلال', shortLabel: 'استعلام اشخاص', soft: true, nationwide: true, dynamicPortal: false },
-  { key: 'fanavaran_portal_disruption', label: 'اختلال فناوران/پرتال', group: 'اختلال', shortLabel: 'فناوران / پرتال', soft: true, nationwide: false, dynamicPortal: true, dynamicWord: 'اختلال' }
+  { key: 'ekhtelal_ashkhas', label: 'اختلال استعلام اشخاص', group: 'اختلال', shortLabel: 'استعلام اشخاص', soft: true, nationwide: true, dynamicPortal: false }
 ];
 
 const NOTICE_ONLY_TITLES = OUTAGE_TYPES.filter(t => t.noticeOnly).map(t => t.label);
-const SOFT_TITLES = OUTAGE_TYPES.filter(t => t.soft).flatMap(t => t.dynamicPortal
-  ? [t.label, 'فناوران ' + (t.dynamicWord || 'قطع'), 'پرتال ' + (t.dynamicWord || 'قطع')]
-  : [t.label]);
+const SOFT_TITLES = OUTAGE_TYPES.filter(t => t.soft).map(t => t.label);
 function isSoftIncident(i) { return !!i && SOFT_TITLES.includes(i.title); }
 function isNoticeIncident(i) { return !!i && NOTICE_ONLY_TITLES.includes(i.title); }
 
@@ -774,6 +764,7 @@ let demoMode = { companies: [], incidents: [] };
 let activeTab = 'live';
 let loadError = null;
 let pendingIncidentPayload = null;
+let editingIncidentId = null;   // اگر null نباشه، مودال قطعی در حالت «ویرایش» هست
 
 function isConfigured() {
   return CONFIG.url && CONFIG.url.indexOf('YOUR-PROJECT') === -1 &&
@@ -1049,6 +1040,18 @@ async function closeIncidentRow(id, closedBy, closedAt) {
   if (row) Object.assign(row, patch);
 }
 
+async function updateIncidentRow(id, patch) {
+  if (CONFIGURED) {
+    const { data, error } = await sb.from('incidents').update(patch).eq('id', id).select();
+    if (error) throw error;
+    if (!data || data.length === 0) throw new Error('اجازه‌ی ویرایش قطعی وجود نداره (پالیسی UPDATE روی جدول incidents رو چک کن).');
+    return data[0];
+  }
+  const row = demoMode.incidents.find(i => String(i.id) === String(id));
+  if (row) Object.assign(row, patch);
+  return row;
+}
+
 async function setCompanyActive(id, active) {
   if (CONFIGURED) {
     const { data, error } = await sb.from('companies').update({ is_active: active }).eq('id', id).select();
@@ -1141,6 +1144,7 @@ function renderAdminNotices() {
     el.innerHTML =
       '<div class="txt">🏷️ شرکت «' + escapeHtml(company ? company.name : 'نامشخص') + '» دارای تگ «' + escapeHtml(inc.title) + '» است — از ' + fmtDateTime(inc.opened_at) +
       (inc.reason ? '<small>' + escapeHtml(inc.reason) + '</small>' : '') + '</div>' +
+      '<button class="btn btn-ghost btn-sm" data-edit-incident="' + inc.id + '">ویرایش</button>' +
       '<button class="btn btn-success btn-sm" data-resolve-notice="' + inc.id + '">رفع تگ</button>';
     wrap.appendChild(el);
   });
@@ -1208,24 +1212,90 @@ function renderCompanyList() {
       '<div class="tile-status">' + lineBadgesHtml + generalChipsHtml + inactiveHtml + '</div>';
     list.appendChild(card);
   });
+  layoutTiles();
 }
 
-function portalOutageFor(company) {
-  const t = OUTAGE_TYPES.find(x => x.key === 'fanavaran_portal');
-  if (!t) return null;
-  const title = typeLabelForCompany(t, company);
-  return generalOpenIncidentsFor(company.id).find(i => i.title === title) || null;
+/* ==========================================================
+   LAYOUT: جاسازی همهٔ کارت‌ها در صفحه بدون اسکرول
+   بهترین تعداد ستون/ردیف را طوری انتخاب می‌کنیم که کارت‌ها بزرگ‌ترین اندازهٔ ممکن
+   را داشته باشند، و ضریب مقیاس (--u) را برای فونت/دکمه‌ها/بج‌ها تنظیم می‌کنیم.
+========================================================== */
+const TILE_BASE_W = 190, TILE_BASE_H = 165;   // اندازهٔ مرجع طراحی (u = 1)
+const TILE_ASPECT = 1.15;                      // نسبت عرض به ارتفاعِ مطلوب
+const TILE_MAX_W = 560, TILE_MAX_H = 520;      // سقف اندازه وقتی تعداد شرکت‌ها کم است
+const TILE_MIN_U = 0.5, TILE_MAX_U = 2;
+
+function layoutTiles() {
+  const list = document.getElementById('companyList');
+  if (!list) return;
+  const n = list.querySelectorAll('.company-tile').length;
+  if (!n) return;
+
+  const W = list.clientWidth, H = list.clientHeight;
+  if (W < 40 || H < 40) return;
+
+  const narrow = W < 620;
+  const gap = narrow ? 6 : 10;
+
+  let best = null;
+  for (let cols = 1; cols <= n; cols++) {
+    const rows = Math.ceil(n / cols);
+    const tw = (W - gap * (cols - 1)) / cols;
+    const th = (H - gap * (rows - 1)) / rows;
+    if (tw <= 0 || th <= 0) continue;
+    const size = Math.min(tw / TILE_ASPECT, th);   // «اندازهٔ مؤثر» کارت
+    const empty = cols * rows - n;                 // خانه‌های خالیِ ردیف آخر
+    if (!best || size > best.size + 0.5 || (Math.abs(size - best.size) <= 0.5 && empty < best.empty)) {
+      best = { cols, rows, tw, th, size, empty };
+    }
+  }
+  if (!best) return;
+
+  const tw = Math.floor(Math.min(best.tw, TILE_MAX_W));
+  const th = Math.floor(Math.min(best.th, TILE_MAX_H));
+  const u = Math.max(TILE_MIN_U, Math.min(TILE_MAX_U, Math.min(tw / TILE_BASE_W, th / TILE_BASE_H)));
+
+  list.style.setProperty('--tw', tw + 'px');
+  list.style.setProperty('--th', th + 'px');
+  list.style.setProperty('--gap', gap + 'px');
+  list.style.setProperty('--u', u.toFixed(3));
+
+  fitTileContent(list, u);
+}
+
+/* اگر محتوای یک کارت (مثلاً چند قطعی همزمان) از ارتفاعش بیشتر شد، فقط همان کارت
+   کمی کوچک‌تر می‌شود تا هیچ قطعی‌ای بریده/پنهان نماند. */
+const TILE_FIT_MIN_U = 0.42;
+function fitTileContent(list, baseU) {
+  list.querySelectorAll('.company-tile').forEach(tile => {
+    const st = tile.querySelector('.tile-status');
+    if (!st) return;
+    let u = baseU, guard = 0;
+    while (st.scrollHeight > st.clientHeight + 1 && u > TILE_FIT_MIN_U && guard++ < 16) {
+      u = Math.max(TILE_FIT_MIN_U, u * 0.93);
+      tile.style.setProperty('--u', u.toFixed(3));
+    }
+  });
+}
+
+(function initTileLayout() {
+  const list = document.getElementById('companyList');
+  let raf = 0;
+  const schedule = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(layoutTiles); };
+  window.addEventListener('resize', schedule);
+  window.addEventListener('orientationchange', schedule);
+  if ('ResizeObserver' in window && list) new ResizeObserver(schedule).observe(list);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(schedule);
+})();
+
+function editButtonHtml(inc) {
+  if (!isOperator() || inc.is_nationwide) return '';
+  return '<button class="chip-edit" data-edit-incident="' + inc.id + '" title="ویرایش قطعی">✎</button>';
 }
 
 function renderLineBadgeHtml(company, line) {
   const incList = openLineIncidentsFor(company.id, line.key);
   if (incList.length === 0) {
-    const portalInc = portalOutageFor(company);
-    if (portalInc) {
-      return '<span class="line-badge line-down" title="' + escapeHtml('به‌دلیل ' + portalInc.title) + '">' +
-        '<span class="line-name">' + escapeHtml(line.label) + ' ● قطع</span>' +
-        '</span>';
-    }
     const clickableAttr = isOperator()
       ? ' data-quick-incident-line="' + company.id + '|' + line.key + '" title="ثبت قطعی برای رشته‌ی ' + escapeHtml(line.label) + '"'
       : '';
@@ -1241,7 +1311,7 @@ function renderLineBadgeHtml(company, line) {
     '[' + (i.title || '—') + '] ' + (i.reason ? i.reason : 'بدون توضیح') + ' — از ' + fmtDateTime(i.opened_at) + ' (' + fmtDuration(i.opened_at) + ') — ثبت: ' + (i.opened_by || '—')
   ).join(' | ');
   const resolveButtonsHtml = isOperator()
-    ? incList.map(i => '<button class="chip-resolve line-report-btn" data-resolve-incident="' + i.id + '" title="ثبت وصلی' + (i.line_detail ? ' برای ' + escapeHtml(i.line_detail) : '') + '">✓</button>').join('')
+    ? incList.map(i => editButtonHtml(i) + '<button class="chip-resolve line-report-btn" data-resolve-incident="' + i.id + '" title="ثبت وصلی' + (i.line_detail ? ' برای ' + escapeHtml(i.line_detail) : '') + '">✓</button>').join('')
     : '';
   const oldestOpenedAt = incList.map(i => i.opened_at).filter(Boolean).sort()[0];
   const timerHtml = oldestOpenedAt ? '<span class="chip-timer">⏱ ' + fmtTimer(oldestOpenedAt) + '</span>' : '';
@@ -1263,7 +1333,7 @@ function renderIncidentChipHtml(inc, company) {
   return '<span class="incident-chip' + (isSoftIncident(inc) ? ' warn' : '') + '" title="' + escapeHtml(tooltip) + '">' +
     '<span class="chip-label">' + escapeHtml(label) + '</span>' +
     '<span class="chip-timer">⏱ ' + fmtTimer(inc.opened_at) + '</span>' +
-    (isOperator() ? '<button class="chip-resolve" data-resolve-incident="' + inc.id + '" title="ثبت وصلی">✓</button>' : '') +
+    (isOperator() ? editButtonHtml(inc) + '<button class="chip-resolve" data-resolve-incident="' + inc.id + '" title="ثبت وصلی">✓</button>' : '') +
     '</span>';
 }
 
@@ -1291,7 +1361,7 @@ function fillIncidentModalSelectors(preselectCompanyId, preselectLineKey) {
   titleSel.innerHTML = titleHtml;
 
   const lineSel = document.getElementById('incLine');
-  lineSel.innerHTML = '<option value="">— عمومی (مختص یک رشته‌ی خاص نیست)</option>' +
+  lineSel.innerHTML = '<option value="">— همه‌ی رشته‌ها (عمومی)</option>' +
     INSURANCE_LINES.map(l => '<option value="' + l.key + '">' + l.label + '</option>').join('');
   lineSel.value = preselectLineKey || '';
 
@@ -1312,7 +1382,8 @@ function updateNationwideVisibility() {
   const typeObj = OUTAGE_TYPES.find(t => t.key === titleKey);
   const wrap = document.getElementById('nationwideCheckWrap');
   wrap.style.display = (typeObj && typeObj.nationwide) ? 'block' : 'none';
-  if (!typeObj || !typeObj.nationwide) document.getElementById('incNationwide').checked = false;
+  if (!typeObj || !typeObj.nationwide || editingIncidentId !== null) document.getElementById('incNationwide').checked = false;
+  if (editingIncidentId !== null) wrap.style.display = 'none';   // در ویرایش، سراسری بودن عوض نمی‌شه
   const noticeOnly = !!(typeObj && typeObj.noticeOnly);
   document.getElementById('lineFieldWrap').style.display = noticeOnly ? 'none' : 'block';
   if (noticeOnly) { document.getElementById('incLine').value = ''; updateLineDetailVisibility(); }
@@ -1324,7 +1395,18 @@ function updateCompanyFieldVisibility() {
   document.getElementById('companyFieldWrap').style.display = isNationwide ? 'none' : 'block';
 }
 
+function setIncidentModalMode(editing) {
+  document.getElementById('incModalTitle').textContent = editing ? 'ویرایش قطعی' : 'ثبت قطعی جدید';
+  document.getElementById('incModalSub').textContent = editing
+    ? 'هر چیزی رو که لازمه عوض کن (مثلاً رشته رو روی «همه‌ی رشته‌ها» بذار) و ذخیره کن؛ نیازی به وصلی و ثبت دوباره نیست.'
+    : 'شرکت و نوع قطعی رو انتخاب کن و علتش رو بنویس.';
+  document.getElementById('incSubmitBtn').textContent = editing ? 'ذخیره تغییرات' : 'ثبت قطعی';
+  document.getElementById('incCompany').disabled = !!editing;
+}
+
 function openIncidentModal(preselectCompanyId, preselectLineKey) {
+  editingIncidentId = null;
+  setIncidentModalMode(false);
   document.getElementById('incWarnBox').style.display = 'none';
   document.getElementById('incReason').value = '';
   document.getElementById('incLineDetail').value = '';
@@ -1332,6 +1414,46 @@ function openIncidentModal(preselectCompanyId, preselectLineKey) {
   document.getElementById('incTime').value = nowTimeHHMM();
   pendingIncidentPayload = null;
   fillIncidentModalSelectors(preselectCompanyId, preselectLineKey);
+  document.getElementById('incidentModal').classList.add('open');
+}
+
+function openEditModal(id) {
+  const inc = incidents.find(i => String(i.id) === String(id));
+  if (!inc) return;
+  const company = companies.find(c => c.id === inc.company_id);
+  editingIncidentId = inc.id;
+  setIncidentModalMode(true);
+  pendingIncidentPayload = null;
+  document.getElementById('incWarnBox').style.display = 'none';
+
+  fillIncidentModalSelectors(inc.company_id, inc.line || '');
+  const compSel = document.getElementById('incCompany');
+  const allOpt = compSel.querySelector('option[value="' + ALL_COMPANIES_VALUE + '"]');
+  if (allOpt) allOpt.remove();
+  if (![...compSel.options].some(o => o.value === inc.company_id)) {
+    compSel.add(new Option(company ? company.name : 'نامشخص', inc.company_id));
+  }
+  compSel.value = inc.company_id;
+
+  const titleSel = document.getElementById('incTitle');
+  const typeObj = OUTAGE_TYPES.find(t => t.label === inc.title ||
+    (t.dynamicPortal && company && typeLabelForCompany(t, company) === inc.title));
+  if (typeObj) {
+    titleSel.value = typeObj.key;
+  } else {
+    titleSel.add(new Option(inc.title || '—', '__keep__'), 0);   // عنوان قدیمی که دیگه توی لیست نیست
+    titleSel.value = '__keep__';
+  }
+  updateNationwideVisibility();
+
+  document.getElementById('incLine').value = inc.line || '';
+  updateLineDetailVisibility();
+  document.getElementById('incLineDetail').value = inc.line_detail || '';
+
+  const d = new Date(inc.opened_at);
+  document.getElementById('incDate').value = ymdOf(d);
+  document.getElementById('incTime').value = hhmmOf(d);
+  document.getElementById('incReason').value = inc.reason || '';
   document.getElementById('incidentModal').classList.add('open');
 }
 
@@ -1487,6 +1609,80 @@ async function submitIncident(force) {
   }
 }
 
+/* ویرایش قطعی بازِ موجود (بدون وصلی و ثبت مجدد) */
+const SHEET_EDIT_ENABLED = false;  // وقتی Apps Script شیت اکشن 'edit' رو پشتیبانی کرد true کن
+
+async function submitEdit(force) {
+  const inc = incidents.find(i => String(i.id) === String(editingIncidentId));
+  const warnBox = document.getElementById('incWarnBox');
+  const fail = (msg) => { warnBox.textContent = msg; warnBox.style.display = 'block'; };
+  if (!inc) { fail('⚠️ این قطعی دیگه باز نیست (احتمالاً وصل شده).'); return; }
+  const company = companies.find(c => c.id === inc.company_id);
+
+  const titleKey = document.getElementById('incTitle').value;
+  const typeObj = OUTAGE_TYPES.find(t => t.key === titleKey);
+  const newTitle = typeObj ? typeLabelForCompany(typeObj, company) : inc.title;
+  const noticeOnly = typeObj ? !!typeObj.noticeOnly : isNoticeIncident(inc);
+  const lineKey = noticeOnly ? null : (document.getElementById('incLine').value || null);
+  const lineObj = INSURANCE_LINES.find(l => l.key === lineKey);
+  const lineDetail = (lineObj && lineObj.customDetail) ? document.getElementById('incLineDetail').value.trim() : null;
+  const reason = document.getElementById('incReason').value.trim();
+  if (lineObj && lineObj.customDetail && !lineDetail) { fail('⚠️ لطفاً بنویس کدوم رشته‌ی غیرخودرویی قطعه.'); return; }
+
+  const openedAt = buildOpenedAt(document.getElementById('incTime').value, document.getElementById('incDate').value);
+  if (openedAt.getTime() > Date.now() + 60000) { fail('⚠️ زمان شروع قطعی نمی‌تونه توی آینده باشه.'); return; }
+
+  const sameMinute = (a, b) => Math.floor(new Date(a).getTime() / 60000) === Math.floor(new Date(b).getTime() / 60000);
+  const unchanged = newTitle === inc.title && lineKey === (inc.line || null) && (lineDetail || null) === (inc.line_detail || null) &&
+    (reason || '') === (inc.reason || '') && sameMinute(openedAt, inc.opened_at);
+  if (unchanged) { closeModal('incidentModal'); return; }
+
+  if (!force) {
+    const dup = allOpenFor(inc.company_id).find(i => String(i.id) !== String(inc.id) && i.title === newTitle &&
+      (i.line || null) === lineKey && (lineObj && lineObj.customDetail ? (i.line_detail || '') === lineDetail : true));
+    if (dup) {
+      fail('⚠️ شرکت «' + (company ? company.name : '') + '» از قبل یه قطعی «' + dup.title + (dup.line_detail ? ' - ' + dup.line_detail : '') + '» با همین مشخصات داره. اگه مطمئنی، دوباره «ذخیره تغییرات» رو بزن.');
+      pendingIncidentPayload = true;
+      return;
+    }
+  }
+
+  const submitBtn = document.getElementById('incSubmitBtn');
+  submitBtn.disabled = true;
+  try {
+    await updateIncidentRow(inc.id, {
+      title: newTitle,
+      line: lineKey,
+      line_detail: lineDetail,
+      reason: reason || null,
+      opened_at: openedAt.toISOString()
+    });
+    const wasNotice = isNoticeIncident(inc);
+    const sheetPayload = {
+      id: inc.id,
+      company: company ? sheetCompanyName(company) : '',
+      tag: newTitle,
+      reason: reason || '',
+      line: lineDetail || (lineObj || {}).label || 'همه رشته‌ها',
+      time: document.getElementById('incTime').value || nowTimeHHMM(),
+      ...faDateParts(openedAt)
+    };
+    if (!wasNotice && !noticeOnly) {
+      if (SHEET_EDIT_ENABLED) logToSheet({ action: 'edit', ...sheetPayload });
+    } else if (wasNotice && !noticeOnly) {
+      logToSheet({ action: 'open', ...sheetPayload });   // تگ تبدیل به قطعی واقعی شد → اولین ثبت توی شیت
+    }
+    editingIncidentId = null;
+    closeModal('incidentModal');
+    await refreshAll();
+  } catch (err) {
+    console.error('خطا در ویرایش قطعی:', err);
+    fail('❌ ذخیره‌ی تغییرات با خطا مواجه شد: ' + (err && (err.message || err.details || err.hint) || JSON.stringify(err)));
+  } finally {
+    submitBtn.disabled = false;
+  }
+}
+
 async function resolveIncident(id, closedAt) {
   const closedBy = session && session.user ? session.user.email : 'نامشخص';
   closedAt = closedAt || new Date();
@@ -1557,7 +1753,8 @@ document.getElementById('incNationwide').addEventListener('change', updateCompan
 document.getElementById('incLine').addEventListener('change', updateLineDetailVisibility);
 
 document.getElementById('incSubmitBtn').addEventListener('click', () => {
-  submitIncident(!!pendingIncidentPayload);
+  if (editingIncidentId !== null) submitEdit(!!pendingIncidentPayload);
+  else submitIncident(!!pendingIncidentPayload);
 });
 
 let resolvingIncidentId = null;
@@ -1609,6 +1806,13 @@ document.addEventListener('click', async (e) => {
       alert('❌ تغییر وضعیت شرکت انجام نشد: ' + (err && (err.message || err.details || err.hint) || err));
       powerBtn.disabled = false;
     }
+    return;
+  }
+
+  const editBtn = e.target.closest('[data-edit-incident]');
+  if (editBtn) {
+    if (!isOperator()) return;
+    openEditModal(editBtn.getAttribute('data-edit-incident'));
     return;
   }
 
@@ -1716,12 +1920,9 @@ async function init() {
   document.getElementById('configBanner').style.display = CONFIGURED ? 'none' : 'flex';
 
   if (CONFIGURED) {
-    // کلید ذخیره‌ی نشست به آدرس پروژه وابسته است تا نشست (JWT) پروژه‌ی قبلی با پروژه‌ی جدید قاطی نشود
-    const projectRef = (CONFIG.url.match(/^https?:\/\/([a-z0-9]+)\./i) || [])[1] || 'default';
     sb = window.supabase.createClient(CONFIG.url, CONFIG.anonKey, {
-      auth: { storageKey: 'wallboard-status-auth-' + projectRef, persistSession: true, autoRefreshToken: true }
+      auth: { storageKey: 'wallboard-status-auth', persistSession: true, autoRefreshToken: true }
     });
-    try { localStorage.removeItem('wallboard-status-auth'); } catch (e) {}   // نشست قدیمیِ پروژه‌ی قبلی
     const { data: { session: s } } = await sb.auth.getSession();
     session = s;
     sb.auth.onAuthStateChange((_event, s2) => { session = s2; render(); });
@@ -1742,40 +1943,6 @@ async function init() {
 }
 
 init();
-</script>
-<script>
-/* Auto-fit zoom: find the largest zoom (MIN..MAX) where no card needs scrolling. */
-(function () {
-  var MIN = 0.5, MAX = 2, root = document.documentElement, timer = null, current = 1;
-  function setZoom(z) { root.style.setProperty('--page-zoom', z); current = z; }
-  function overflows(list) { return list.scrollHeight > list.clientHeight + 1; }
-  function fit() {
-    var list = document.getElementById('companyList');
-    if (!list) return;
-    if (window.matchMedia('(max-width: 620px)').matches || !list.querySelector('.company-tile')) { setZoom(1); return; }
-    var lo = MIN, hi = MAX;
-    setZoom(MIN);
-    if (overflows(list)) return;                 // even the minimum doesn't fit: stay at MIN
-    setZoom(MAX);
-    if (!overflows(list)) return;                // everything fits even at MAX
-    for (var i = 0; i < 9; i++) {                // binary search, precision ~0.003
-      var mid = (lo + hi) / 2;
-      setZoom(mid);
-      if (overflows(list)) hi = mid; else lo = mid;
-    }
-    setZoom(Math.floor(lo * 100) / 100);         // largest value that fits
-  }
-  function schedule() { clearTimeout(timer); timer = setTimeout(fit, 150); }
-  window.addEventListener('resize', schedule);
-  window.addEventListener('load', fit);
-  var list = document.getElementById('companyList');
-  if (list) new MutationObserver(schedule).observe(list, { childList: true, subtree: true });
-  ['adminNotices', 'nationwideBanners'].forEach(function (id) {
-    var el = document.getElementById(id);
-    if (el) new MutationObserver(schedule).observe(el, { childList: true, subtree: true });
-  });
-  fit();
-})();
 </script>
 </body>
 </html>

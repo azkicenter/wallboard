@@ -1207,7 +1207,7 @@ function renderAdminNotices() {
 function renderNationwideBanners() {
   const wrap = document.getElementById('nationwideBanners');
   wrap.innerHTML = '';
-  const nationwideTitles = OUTAGE_TYPES.filter(t => t.nationwide).map(t => t.label);
+  const nationwideTitles = [...new Set(incidents.filter(i => i.status === 'open' && i.is_nationwide).map(i => i.title))];
   nationwideTitles.forEach(title => {
     const openForTitle = incidents.filter(i => i.status === 'open' && i.title === title && i.is_nationwide);
     if (openForTitle.length === 0) return;
@@ -1600,7 +1600,10 @@ async function submitIncident(force) {
   const titleKey = document.getElementById('incTitle').value;
   const typeObj = OUTAGE_TYPES.find(t => t.key === titleKey);
   const allCompaniesSelected = document.getElementById('incCompany').value === ALL_COMPANIES_VALUE;
-  const isNationwide = typeObj.nationwide && (document.getElementById('incNationwide').checked || allCompaniesSelected);
+  // «تمام شرکت‌ها» برای هر نوع قطعی = یک قطعی سراسری (یه ردیف توی شیت، یه وصلیِ یکجا)
+  // استثنا: نوع‌هایی که عنوانشون برای هر شرکت فرق می‌کنه (فناوران/پرتال) و تگ‌های فقط‌اطلاع‌رسانی
+  const isNationwide = (typeObj.nationwide && (document.getElementById('incNationwide').checked || allCompaniesSelected)) ||
+    (allCompaniesSelected && !typeObj.dynamicPortal && !typeObj.noticeOnly);
   const reason = document.getElementById('incReason').value.trim();
   const lineKey = typeObj.noticeOnly ? null : (document.getElementById('incLine').value || null);
   const lineObj = INSURANCE_LINES.find(l => l.key === lineKey);

@@ -1665,7 +1665,7 @@ async function submitIncident(force) {
           company: sheetCompanyName(c),
           tag: typeLabelForCompany(typeObj, c),
           reason: reason || '',
-          line: lineDetail || (lineObj || {}).label || 'همه رشته‌ها',
+          line: lineDetail || (lineObj || {}).label || 'همه رشته ها',
           time: document.getElementById('incTime').value || nowTimeHHMM(),
           ...faDateParts(openedAt)
         });
@@ -1678,7 +1678,7 @@ async function submitIncident(force) {
         company: 'تمام شرکت‌ها',
         tag: typeLabelForCompany(typeObj, targetCompanies.find(c => c) || {}),
         reason: reason || '',
-        line: lineDetail || (lineObj || {}).label || 'همه رشته‌ها',
+        line: lineDetail || (lineObj || {}).label || 'همه رشته ها',
         time: document.getElementById('incTime').value || nowTimeHHMM(),
         ...faDateParts(openedAt)
       });
@@ -1823,7 +1823,7 @@ async function submitEdit(force) {
       company: company ? sheetCompanyName(company) : '',
       tag: newTitle,
       reason: reason || '',
-      line: lineDetail || (lineObj || {}).label || 'همه رشته‌ها',
+      line: lineDetail || (lineObj || {}).label || 'همه رشته ها',
       time: document.getElementById('incTime').value || nowTimeHHMM(),
       ...faDateParts(openedAt)
     };

@@ -71,7 +71,6 @@
     background: #0c1226;
     color: var(--ink);
     height: 100vh;
-    height: 100dvh;
     display: flex;
     flex-direction: column;
     transition: background .25s ease, color .25s ease;
@@ -168,37 +167,29 @@
   .admin-notice .txt { font-size: 13.5px; font-weight: 700; color: var(--amber); line-height: 1.8; }
   .admin-notice .txt small { display: block; font-weight: 500; opacity: .85; }
 
-  /* اندازهٔ کارت‌ها (--tw / --th) و ضریب مقیاس محتوا (--u) را تابع layoutTiles() بر اساس
-     اندازهٔ واقعی صفحه محاسبه می‌کند تا همهٔ کارت‌ها بدون اسکرول جا شوند. */
   .company-list {
-    --u: 1; --tw: 190px; --th: 165px; --gap: 10px;
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    align-content: center;
-    align-items: stretch;
-    gap: var(--gap);
-    flex: 1 1 0;
+    align-content: flex-start;
+    gap: 10px;
+    flex: 1;
     min-height: 0;
-    overflow: hidden;
+    overflow-y: auto;
   }
   .company-tile {
-    flex: 0 0 auto;
-    width: var(--tw);
-    height: var(--th);
+    flex: 1 1 165px;
+    max-width: 210px;
     border-radius: var(--radius);
     border: 1.5px solid var(--line);
-    padding: calc(10px * var(--u)) calc(10px * var(--u)) calc(12px * var(--u));
-    display: flex; flex-direction: column; align-items: center; gap: calc(4px * var(--u));
-    min-width: 0; overflow: hidden;
+    padding: 10px 10px 12px;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    min-height: 150px; min-width: 0; overflow: hidden;
     position: relative;
     box-shadow: var(--shadow-card);
     -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
     backdrop-filter: blur(var(--glass-blur)) saturate(180%);
   }
-  /* گوشی: اسکرول مجازه، کارت‌ها با اندازه‌ی ثابت و چند ستونه */
-  .company-list.scroll-mode { overflow-y: auto; align-content: flex-start; }
-  .company-list.scroll-mode .company-tile { flex: 1 1 130px; width: auto; max-width: 210px; height: auto; min-height: 150px; }
   .company-tile.up { background: linear-gradient(150deg, var(--success-soft) 0%, var(--surface) 75%); border-color: rgba(31,169,113,.45); }
   .company-tile.down {
     background: linear-gradient(150deg, var(--danger-soft) 0%, var(--surface) 70%);
@@ -218,19 +209,19 @@
     0%, 100% { box-shadow: var(--shadow-card), 0 0 0 0 rgba(224,69,63,.35); }
     50% { box-shadow: var(--shadow-card), 0 0 0 5px rgba(224,69,63,0); }
   }
-  .tile-logo-wrap { flex: 1 1 0; width: 100%; min-height: 20%; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .tile-logo-wrap { flex: 1; width: 100%; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
   .company-logo { width: 100%; height: 100%; object-fit: contain; }
   .company-logo-fallback {
-    width: 70%; height: 70%; max-width: calc(90px * var(--u)); max-height: calc(90px * var(--u)); border-radius: 14px;
+    width: 70%; height: 70%; max-width: 90px; max-height: 90px; border-radius: 14px;
     background: var(--accent-soft); color: var(--accent-strong);
-    display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: calc(28px * var(--u));
+    display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 28px;
   }
-  .tile-name { font-size: calc(14px * var(--u)); font-weight: 800; width: 100%; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0; }
+  .tile-name { font-size: 14px; font-weight: 800; width: 100%; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0; }
   .tile-quick-btn {
-    position: absolute; inset-inline-end: calc(8px * var(--u)); inset-block-start: calc(8px * var(--u)); z-index: 1;
-    flex-shrink: 0; width: calc(24px * var(--u)); height: calc(24px * var(--u)); border-radius: 50%;
+    position: absolute; inset-inline-end: 8px; inset-block-start: 8px; z-index: 1;
+    flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
     background: var(--surface-tint); border: 1px solid var(--line); color: var(--ink);
-    font-size: calc(15px * var(--u)); font-weight: 800; line-height: 1; cursor: pointer;
+    font-size: 15px; font-weight: 800; line-height: 1; cursor: pointer;
     display: flex; align-items: center; justify-content: center; padding: 0;
   }
   .tile-quick-btn:hover { background: var(--accent-soft); color: var(--accent-strong); }
@@ -242,28 +233,27 @@
   .company-tile.inactive .tile-logo-wrap,
   .company-tile.inactive .tile-name { opacity: .28; filter: grayscale(1); }
   .tile-inactive-label {
-    font-size: calc(11.5px * var(--u)); font-weight: 800; color: var(--ink-faint);
+    font-size: 11.5px; font-weight: 800; color: var(--ink-faint);
     background: var(--surface-tint); border: 1px dashed var(--line);
-    border-radius: 999px; padding: calc(3px * var(--u)) calc(12px * var(--u));
+    border-radius: 999px; padding: 3px 12px;
   }
   .tile-power-btn {
-    position: absolute; inset-inline-start: calc(8px * var(--u)); inset-block-start: calc(8px * var(--u)); z-index: 2;
-    width: calc(24px * var(--u)); height: calc(24px * var(--u)); border-radius: 50%; padding: 0; cursor: pointer;
+    position: absolute; inset-inline-start: 8px; inset-block-start: 8px; z-index: 2;
+    width: 24px; height: 24px; border-radius: 50%; padding: 0; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     background: var(--success-soft); border: 1.5px solid var(--success); color: var(--success);
     transition: transform .12s, background .15s, opacity .15s;
   }
-  .tile-power-btn svg { width: calc(13px * var(--u)); height: calc(13px * var(--u)); }
+  .tile-power-btn svg { width: 13px; height: 13px; }
   .tile-power-btn:hover { transform: scale(1.12); }
   .tile-power-btn:disabled { opacity: .5; cursor: wait; }
   .tile-power-btn.off { background: var(--surface-tint); border-color: var(--ink-faint); color: var(--ink-faint); }
-  .tile-status { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(6px * var(--u)); width: 100%; min-height: 0; overflow-y: auto; flex: 0 1 auto; scrollbar-width: none; }
-  .tile-status::-webkit-scrollbar { display: none; }
-  .tile-status-up { color: var(--success); font-weight: 800; font-size: calc(16px * var(--u)); letter-spacing: -.01em; }
+  .tile-status { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; width: 100%; min-height: 0; overflow-y: auto; flex-shrink: 0; }
+  .tile-status-up { color: var(--success); font-weight: 800; font-size: 16px; letter-spacing: -.01em; }
   .incident-chip {
-    display: inline-flex; align-items: center; justify-content: center; gap: calc(5px * var(--u)); flex-wrap: wrap; row-gap: calc(2px * var(--u));
+    display: inline-flex; align-items: center; justify-content: center; gap: 5px; flex-wrap: wrap; row-gap: 2px;
     background: var(--danger-soft); color: var(--danger); border: 1.5px solid var(--danger);
-    border-radius: 14px; padding: calc(5px * var(--u)) calc(6px * var(--u)) calc(5px * var(--u)) calc(9px * var(--u)); font-size: calc(12px * var(--u)); font-weight: 800; max-width: 100%;
+    border-radius: 14px; padding: 5px 6px 5px 9px; font-size: 12px; font-weight: 800; max-width: 100%;
   }
   .incident-chip.warn { background: var(--amber-soft); color: var(--amber); border-color: var(--amber); }
   .incident-chip .chip-label {
@@ -271,49 +261,57 @@
   }
   .incident-chip .chip-timer {
     font-variant-numeric: tabular-nums; font-family: 'Courier New', ui-monospace, monospace;
-    font-weight: 700; font-size: calc(9.5px * var(--u)); letter-spacing: -.02em; flex-shrink: 0;
-    background: rgba(0,0,0,.06); border-radius: 999px; padding: calc(1px * var(--u)) calc(6px * var(--u)); white-space: nowrap; opacity: .85;
+    font-weight: 700; font-size: 9.5px; letter-spacing: -.02em; flex-shrink: 0;
+    background: rgba(0,0,0,.06); border-radius: 999px; padding: 1px 6px; white-space: nowrap; opacity: .85;
   }
   .chip-resolve {
     background: var(--success); color: #fff; border: none; border-radius: 50%;
-    width: calc(21px * var(--u)); height: calc(21px * var(--u)); font-size: calc(12.5px * var(--u)); cursor: pointer; flex-shrink: 0;
+    width: 21px; height: 21px; font-size: 12.5px; cursor: pointer; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center; padding: 0; line-height: 1;
   }
 
-  .chip-edit {
-    background: rgba(0,0,0,.10); color: inherit; border: none; border-radius: 50%;
-    width: calc(21px * var(--u)); height: calc(21px * var(--u)); font-size: calc(12px * var(--u)); cursor: pointer; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center; padding: 0; line-height: 1;
-  }
-  .chip-edit:hover { background: rgba(0,0,0,.20); }
   .line-badge {
-    display: inline-flex; align-items: center; gap: calc(6px * var(--u));
-    border-radius: 999px; padding: calc(4px * var(--u)) calc(10px * var(--u)); font-size: calc(12px * var(--u)); font-weight: 800; max-width: 100%;
+    display: inline-flex; align-items: center; gap: 6px;
+    border-radius: 999px; padding: 4px 10px; font-size: 12px; font-weight: 800; max-width: 100%;
   }
   .line-badge .line-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .line-badge.line-up { background: var(--success-soft); color: var(--success); border: 1.5px solid var(--success); }
-  .line-badge.line-down { background: var(--danger-soft); color: var(--danger); border: 1.5px solid var(--danger); padding-inline-end: calc(5px * var(--u)); }
+  .line-badge.line-down { background: var(--danger-soft); color: var(--danger); border: 1.5px solid var(--danger); padding-inline-end: 5px; }
   .line-badge.line-down.line-warn { background: var(--amber-soft); color: var(--amber); border-color: var(--amber); }
   .line-badge.line-down.has-tag { border-radius: 14px; justify-content: center; }
   .line-badge.line-down .line-name { text-align: center; }
-  .line-badge .line-tag { display: block; font-size: calc(10.5px * var(--u)); font-weight: 700; opacity: .85; overflow: hidden; text-overflow: ellipsis; }
-  .line-badge .line-sub { display: flex; align-items: center; justify-content: center; gap: calc(5px * var(--u)); flex-wrap: wrap; }
+  .line-badge .line-tag { display: block; font-size: 10.5px; font-weight: 700; opacity: .85; overflow: hidden; text-overflow: ellipsis; }
+  .line-badge .line-sub { display: flex; align-items: center; justify-content: center; gap: 5px; flex-wrap: wrap; }
   .line-badge .chip-timer {
     font-variant-numeric: tabular-nums; font-family: 'Courier New', ui-monospace, monospace;
-    font-weight: 700; font-size: calc(9.5px * var(--u)); letter-spacing: -.02em; flex-shrink: 0;
-    background: rgba(0,0,0,.06); border-radius: 999px; padding: calc(1px * var(--u)) calc(6px * var(--u)); white-space: nowrap; opacity: .85;
+    font-weight: 700; font-size: 9.5px; letter-spacing: -.02em; flex-shrink: 0;
+    background: rgba(0,0,0,.06); border-radius: 999px; padding: 1px 6px; white-space: nowrap; opacity: .85;
   }
+  .chip-edit {
+    background: rgba(0,0,0,.10); color: inherit; border: none; border-radius: 50%;
+    width: 21px; height: 21px; font-size: 12px; cursor: pointer; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; padding: 0; line-height: 1;
+  }
+  .chip-edit:hover { background: rgba(0,0,0,.20); }
   .line-power-btn {
     display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
-    width: calc(16px * var(--u)); height: calc(16px * var(--u)); border-radius: 50%; padding: 0; cursor: pointer;
+    width: 16px; height: 16px; border-radius: 50%; padding: 0; cursor: pointer;
     background: rgba(0,0,0,.08); border: none; color: inherit; opacity: .75;
     transition: transform .12s, opacity .15s;
   }
   .line-power-btn:hover { transform: scale(1.15); opacity: 1; }
   .line-power-btn:disabled { opacity: .4; cursor: wait; }
-  .line-power-btn svg { width: calc(10px * var(--u)); height: calc(10px * var(--u)); }
+  .line-power-btn svg { width: 10px; height: 10px; }
   .line-badge.line-inactive { background: var(--surface-tint); color: var(--ink-faint); border: 1.5px dashed var(--ink-faint); }
   .line-badge.line-inactive .line-name { opacity: .85; }
+
+  /* دسکتاپ/تبلت/تلویزیون: کارت‌ها همیشه با اندازه‌ی طراحی ثابت؛ کل شبکه با zoom کوچک/بزرگ می‌شود تا بدون اسکرول جا شود */
+  #panel-live { justify-content: center; }
+  .company-list.fit-mode { flex: none; margin: 0 auto; overflow: visible; align-content: flex-start; justify-content: center; gap: 10px; }
+  .company-list.fit-mode .company-tile { flex: 0 0 auto; width: 200px; height: var(--th, 340px); max-width: none; min-height: 0; }
+  .company-list.fit-mode .tile-status { flex-shrink: 0; }
+  /* گوشی: اسکرول مجازه */
+  .company-list.scroll-mode { overflow-y: auto; align-content: flex-start; }
 
   .line-badge.line-up.clickable { cursor: pointer; }
   .line-badge.line-up.clickable:hover { filter: brightness(1.08); }
@@ -380,6 +378,8 @@
   @media (max-width: 620px) {
     header.topbar { padding: 12px 14px; }
     main { padding: 14px 12px 10px; }
+    .company-list { overflow-y: auto; }
+    .company-tile { flex-basis: 130px; }
   }
 </style>
 </head>
@@ -1270,85 +1270,73 @@ function renderCompanyList() {
 }
 
 /* ==========================================================
-   LAYOUT: جاسازی همهٔ کارت‌ها در صفحه بدون اسکرول
-   بهترین تعداد ستون/ردیف را طوری انتخاب می‌کنیم که کارت‌ها بزرگ‌ترین اندازهٔ ممکن
-   را داشته باشند، و ضریب مقیاس (--u) را برای فونت/دکمه‌ها/بج‌ها تنظیم می‌کنیم.
+   LAYOUT: کارت‌ها همیشه همون اندازه‌ی طراحی رو دارن؛ فقط کل شبکه
+   مثل زوم مرورگر کوچیک/بزرگ می‌شه تا همه‌ی کارت‌ها بدون اسکرول جا بشن.
+   روی گوشی (عرض کم) اسکرول مجازه و زوم اعمال نمی‌شه.
 ========================================================== */
-const TILE_BASE_W = 190, TILE_BASE_H = 165;   // اندازهٔ مرجع طراحی (u = 1)
-const TILE_ASPECT = 1.15;                      // نسبت عرض به ارتفاعِ مطلوب
-const TILE_MAX_W = 560, TILE_MAX_H = 520;      // سقف اندازه وقتی تعداد شرکت‌ها کم است
-const TILE_MIN_U = 0.5, TILE_MAX_U = 2;
+const FIT_TILE_W = 200, FIT_TILE_H = 340, FIT_GAP = 10, FIT_MAX_ZOOM = 3;
 
 function layoutTiles() {
   const list = document.getElementById('companyList');
-  if (!list) return;
-  const n = list.querySelectorAll('.company-tile').length;
+  const panel = document.getElementById('panel-live');
+  if (!list || !panel) return;
+  const tiles = [...list.querySelectorAll('.company-tile')];
+  const n = tiles.length;
   if (!n) return;
 
-  // گوشی (عرض کم یا ارتفاع خیلی کم): حالت اسکرولی با اندازه‌ی ثابت
   const mobile = window.innerWidth <= 620 || window.innerHeight < 480;
   list.classList.toggle('scroll-mode', mobile);
+  list.classList.toggle('fit-mode', !mobile);
   if (mobile) {
-    ['--tw', '--th', '--gap', '--u'].forEach(p => list.style.removeProperty(p));
-    list.querySelectorAll('.company-tile').forEach(t => t.style.removeProperty('--u'));
-    list.style.setProperty('--gap', '8px');
+    list.style.removeProperty('zoom');
+    list.style.removeProperty('width');
+    list.style.removeProperty('--th');
     return;
   }
 
-  const W = list.clientWidth, H = list.clientHeight;
-  if (W < 40 || H < 40) return;
+  // ارتفاع طراحی: اگه محتوای یه کارت (چند قطعی همزمان) بیشتر جا بخواد، همه‌ی کارت‌ها همون‌قدر بلند می‌شن
+  list.style.removeProperty('zoom');
+  list.style.setProperty('--th', FIT_TILE_H + 'px');
+  let th = FIT_TILE_H;
+  tiles.forEach(t => {
+    const st = t.querySelector('.tile-status');
+    const nm = t.querySelector('.tile-name');
+    if (!st) return;
+    const need = 22 + 90 + (nm ? nm.offsetHeight + 4 : 0) + st.scrollHeight + 8;
+    if (need > th) th = need;
+  });
+  th = Math.ceil(th);
+  list.style.setProperty('--th', th + 'px');
 
-  const narrow = W < 620;
-  const gap = narrow ? 6 : 10;
+  const others = [...panel.children].filter(c => c !== list).reduce((sum, c) => {
+    const cs = getComputedStyle(c);
+    return sum + c.offsetHeight + (parseFloat(cs.marginTop) || 0) + (parseFloat(cs.marginBottom) || 0);
+  }, 0);
+  const W = panel.clientWidth, H = panel.clientHeight - others - 2;
+  if (W < 40 || H < 40) return;
 
   let best = null;
   for (let cols = 1; cols <= n; cols++) {
     const rows = Math.ceil(n / cols);
-    const tw = (W - gap * (cols - 1)) / cols;
-    const th = (H - gap * (rows - 1)) / rows;
-    if (tw <= 0 || th <= 0) continue;
-    const size = Math.min(tw / TILE_ASPECT, th);   // «اندازهٔ مؤثر» کارت
-    const empty = cols * rows - n;                 // خانه‌های خالیِ ردیف آخر
-    if (!best || size > best.size + 0.5 || (Math.abs(size - best.size) <= 0.5 && empty < best.empty)) {
-      best = { cols, rows, tw, th, size, empty };
+    const wd = cols * FIT_TILE_W + (cols - 1) * FIT_GAP;
+    const hd = rows * th + (rows - 1) * FIT_GAP;
+    const z = Math.min(W / wd, H / hd);
+    const empty = cols * rows - n;
+    if (!best || z > best.z + 0.001 || (Math.abs(z - best.z) <= 0.001 && empty < best.empty)) {
+      best = { cols, wd, z, empty };
     }
   }
-  if (!best) return;
-
-  const tw = Math.floor(Math.min(best.tw, TILE_MAX_W));
-  const th = Math.floor(Math.min(best.th, TILE_MAX_H));
-  const u = Math.max(TILE_MIN_U, Math.min(TILE_MAX_U, Math.min(tw / TILE_BASE_W, th / TILE_BASE_H)));
-
-  list.style.setProperty('--tw', tw + 'px');
-  list.style.setProperty('--th', th + 'px');
-  list.style.setProperty('--gap', gap + 'px');
-  list.style.setProperty('--u', u.toFixed(3));
-
-  fitTileContent(list, u);
-}
-
-/* اگر محتوای یک کارت (مثلاً چند قطعی همزمان) از ارتفاعش بیشتر شد، فقط همان کارت
-   کمی کوچک‌تر می‌شود تا هیچ قطعی‌ای بریده/پنهان نماند. */
-const TILE_FIT_MIN_U = 0.42;
-function fitTileContent(list, baseU) {
-  list.querySelectorAll('.company-tile').forEach(tile => {
-    const st = tile.querySelector('.tile-status');
-    if (!st) return;
-    let u = baseU, guard = 0;
-    while (st.scrollHeight > st.clientHeight + 1 && u > TILE_FIT_MIN_U && guard++ < 16) {
-      u = Math.max(TILE_FIT_MIN_U, u * 0.93);
-      tile.style.setProperty('--u', u.toFixed(3));
-    }
-  });
+  list.style.width = best.wd + 'px';
+  list.style.zoom = Math.min(best.z, FIT_MAX_ZOOM).toFixed(4);
 }
 
 (function initTileLayout() {
-  const list = document.getElementById('companyList');
+  const panel = document.getElementById('panel-live');
   let raf = 0;
   const schedule = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(layoutTiles); };
   window.addEventListener('resize', schedule);
   window.addEventListener('orientationchange', schedule);
-  if ('ResizeObserver' in window && list) new ResizeObserver(schedule).observe(list);
+  if ('ResizeObserver' in window && panel) new ResizeObserver(schedule).observe(panel);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(schedule);
 })();
 

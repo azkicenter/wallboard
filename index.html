@@ -71,7 +71,6 @@
     background: #0c1226;
     color: var(--ink);
     height: 100vh;
-    height: 100dvh;
     display: flex;
     flex-direction: column;
     transition: background .25s ease, color .25s ease;
@@ -132,7 +131,7 @@
   .logout-link:hover { color: var(--danger); }
 
   main {
-    max-width: none; width: 100%; margin: 0 auto;
+    max-width: 1700px; width: 100%; margin: 0 auto;
     padding: 8px 16px 8px;
     position: relative; z-index: 1;
     flex: 1; min-height: 0;
@@ -168,29 +167,24 @@
   .admin-notice .txt { font-size: 13.5px; font-weight: 700; color: var(--amber); line-height: 1.8; }
   .admin-notice .txt small { display: block; font-weight: 500; opacity: .85; }
 
-  /* اندازهٔ کارت‌ها (--tw / --th) و ضریب مقیاس محتوا (--u) را تابع layoutTiles() بر اساس
-     اندازهٔ واقعی صفحه محاسبه می‌کند تا همهٔ کارت‌ها بدون اسکرول جا شوند. */
   .company-list {
-    --u: 1; --tw: 190px; --th: 165px; --gap: 10px;
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    align-content: center;
-    align-items: stretch;
-    gap: var(--gap);
-    flex: 1 1 0;
+    align-content: flex-start;
+    gap: 10px;
+    flex: 1;
     min-height: 0;
-    overflow: hidden;
+    overflow-y: auto;
   }
   .company-tile {
-    flex: 0 0 auto;
-    width: var(--tw);
-    height: var(--th);
+    flex: 1 1 165px;
+    max-width: 210px;
     border-radius: var(--radius);
     border: 1.5px solid var(--line);
-    padding: calc(10px * var(--u)) calc(10px * var(--u)) calc(12px * var(--u));
-    display: flex; flex-direction: column; align-items: center; gap: calc(4px * var(--u));
-    min-width: 0; overflow: hidden;
+    padding: 10px 10px 12px;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    min-height: 150px; min-width: 0; overflow: hidden;
     position: relative;
     box-shadow: var(--shadow-card);
     -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
@@ -215,19 +209,19 @@
     0%, 100% { box-shadow: var(--shadow-card), 0 0 0 0 rgba(224,69,63,.35); }
     50% { box-shadow: var(--shadow-card), 0 0 0 5px rgba(224,69,63,0); }
   }
-  .tile-logo-wrap { flex: 1 1 0; width: 100%; min-height: 20%; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .tile-logo-wrap { flex: 1; width: 100%; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
   .company-logo { width: 100%; height: 100%; object-fit: contain; }
   .company-logo-fallback {
-    width: 70%; height: 70%; max-width: calc(90px * var(--u)); max-height: calc(90px * var(--u)); border-radius: 14px;
+    width: 70%; height: 70%; max-width: 90px; max-height: 90px; border-radius: 14px;
     background: var(--accent-soft); color: var(--accent-strong);
-    display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: calc(28px * var(--u));
+    display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 28px;
   }
-  .tile-name { font-size: calc(14px * var(--u)); font-weight: 800; width: 100%; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0; }
+  .tile-name { font-size: 14px; font-weight: 800; width: 100%; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0; }
   .tile-quick-btn {
-    position: absolute; inset-inline-end: calc(8px * var(--u)); inset-block-start: calc(8px * var(--u)); z-index: 1;
-    flex-shrink: 0; width: calc(24px * var(--u)); height: calc(24px * var(--u)); border-radius: 50%;
+    position: absolute; inset-inline-end: 8px; inset-block-start: 8px; z-index: 1;
+    flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
     background: var(--surface-tint); border: 1px solid var(--line); color: var(--ink);
-    font-size: calc(15px * var(--u)); font-weight: 800; line-height: 1; cursor: pointer;
+    font-size: 15px; font-weight: 800; line-height: 1; cursor: pointer;
     display: flex; align-items: center; justify-content: center; padding: 0;
   }
   .tile-quick-btn:hover { background: var(--accent-soft); color: var(--accent-strong); }
@@ -239,28 +233,27 @@
   .company-tile.inactive .tile-logo-wrap,
   .company-tile.inactive .tile-name { opacity: .28; filter: grayscale(1); }
   .tile-inactive-label {
-    font-size: calc(11.5px * var(--u)); font-weight: 800; color: var(--ink-faint);
+    font-size: 11.5px; font-weight: 800; color: var(--ink-faint);
     background: var(--surface-tint); border: 1px dashed var(--line);
-    border-radius: 999px; padding: calc(3px * var(--u)) calc(12px * var(--u));
+    border-radius: 999px; padding: 3px 12px;
   }
   .tile-power-btn {
-    position: absolute; inset-inline-start: calc(8px * var(--u)); inset-block-start: calc(8px * var(--u)); z-index: 2;
-    width: calc(24px * var(--u)); height: calc(24px * var(--u)); border-radius: 50%; padding: 0; cursor: pointer;
+    position: absolute; inset-inline-start: 8px; inset-block-start: 8px; z-index: 2;
+    width: 24px; height: 24px; border-radius: 50%; padding: 0; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     background: var(--success-soft); border: 1.5px solid var(--success); color: var(--success);
     transition: transform .12s, background .15s, opacity .15s;
   }
-  .tile-power-btn svg { width: calc(13px * var(--u)); height: calc(13px * var(--u)); }
+  .tile-power-btn svg { width: 13px; height: 13px; }
   .tile-power-btn:hover { transform: scale(1.12); }
   .tile-power-btn:disabled { opacity: .5; cursor: wait; }
   .tile-power-btn.off { background: var(--surface-tint); border-color: var(--ink-faint); color: var(--ink-faint); }
-  .tile-status { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(6px * var(--u)); width: 100%; min-height: 0; overflow-y: auto; flex: 0 1 auto; scrollbar-width: none; }
-  .tile-status::-webkit-scrollbar { display: none; }
-  .tile-status-up { color: var(--success); font-weight: 800; font-size: calc(16px * var(--u)); letter-spacing: -.01em; }
+  .tile-status { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; width: 100%; min-height: 0; overflow-y: auto; flex-shrink: 0; }
+  .tile-status-up { color: var(--success); font-weight: 800; font-size: 16px; letter-spacing: -.01em; }
   .incident-chip {
-    display: inline-flex; align-items: center; justify-content: center; gap: calc(5px * var(--u)); flex-wrap: wrap; row-gap: calc(2px * var(--u));
+    display: inline-flex; align-items: center; justify-content: center; gap: 5px; flex-wrap: wrap; row-gap: 2px;
     background: var(--danger-soft); color: var(--danger); border: 1.5px solid var(--danger);
-    border-radius: 14px; padding: calc(5px * var(--u)) calc(6px * var(--u)) calc(5px * var(--u)) calc(9px * var(--u)); font-size: calc(12px * var(--u)); font-weight: 800; max-width: 100%;
+    border-radius: 14px; padding: 5px 6px 5px 9px; font-size: 12px; font-weight: 800; max-width: 100%;
   }
   .incident-chip.warn { background: var(--amber-soft); color: var(--amber); border-color: var(--amber); }
   .incident-chip .chip-label {
@@ -268,37 +261,37 @@
   }
   .incident-chip .chip-timer {
     font-variant-numeric: tabular-nums; font-family: 'Courier New', ui-monospace, monospace;
-    font-weight: 700; font-size: calc(9.5px * var(--u)); letter-spacing: -.02em; flex-shrink: 0;
-    background: rgba(0,0,0,.06); border-radius: 999px; padding: calc(1px * var(--u)) calc(6px * var(--u)); white-space: nowrap; opacity: .85;
+    font-weight: 700; font-size: 9.5px; letter-spacing: -.02em; flex-shrink: 0;
+    background: rgba(0,0,0,.06); border-radius: 999px; padding: 1px 6px; white-space: nowrap; opacity: .85;
   }
   .chip-resolve {
     background: var(--success); color: #fff; border: none; border-radius: 50%;
-    width: calc(21px * var(--u)); height: calc(21px * var(--u)); font-size: calc(12.5px * var(--u)); cursor: pointer; flex-shrink: 0;
+    width: 21px; height: 21px; font-size: 12.5px; cursor: pointer; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center; padding: 0; line-height: 1;
   }
 
   .chip-edit {
     background: rgba(0,0,0,.10); color: inherit; border: none; border-radius: 50%;
-    width: calc(21px * var(--u)); height: calc(21px * var(--u)); font-size: calc(12px * var(--u)); cursor: pointer; flex-shrink: 0;
+    width: 21px; height: 21px; font-size: 12px; cursor: pointer; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center; padding: 0; line-height: 1;
   }
   .chip-edit:hover { background: rgba(0,0,0,.20); }
   .line-badge {
-    display: inline-flex; align-items: center; gap: calc(6px * var(--u));
-    border-radius: 999px; padding: calc(4px * var(--u)) calc(10px * var(--u)); font-size: calc(12px * var(--u)); font-weight: 800; max-width: 100%;
+    display: inline-flex; align-items: center; gap: 6px;
+    border-radius: 999px; padding: 4px 10px; font-size: 12px; font-weight: 800; max-width: 100%;
   }
   .line-badge .line-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .line-badge.line-up { background: var(--success-soft); color: var(--success); border: 1.5px solid var(--success); }
-  .line-badge.line-down { background: var(--danger-soft); color: var(--danger); border: 1.5px solid var(--danger); padding-inline-end: calc(5px * var(--u)); }
+  .line-badge.line-down { background: var(--danger-soft); color: var(--danger); border: 1.5px solid var(--danger); padding-inline-end: 5px; }
   .line-badge.line-down.line-warn { background: var(--amber-soft); color: var(--amber); border-color: var(--amber); }
   .line-badge.line-down.has-tag { border-radius: 14px; justify-content: center; }
   .line-badge.line-down .line-name { text-align: center; }
-  .line-badge .line-tag { display: block; font-size: calc(10.5px * var(--u)); font-weight: 700; opacity: .85; overflow: hidden; text-overflow: ellipsis; }
-  .line-badge .line-sub { display: flex; align-items: center; justify-content: center; gap: calc(5px * var(--u)); flex-wrap: wrap; }
+  .line-badge .line-tag { display: block; font-size: 10.5px; font-weight: 700; opacity: .85; overflow: hidden; text-overflow: ellipsis; }
+  .line-badge .line-sub { display: flex; align-items: center; justify-content: center; gap: 5px; flex-wrap: wrap; }
   .line-badge .chip-timer {
     font-variant-numeric: tabular-nums; font-family: 'Courier New', ui-monospace, monospace;
-    font-weight: 700; font-size: calc(9.5px * var(--u)); letter-spacing: -.02em; flex-shrink: 0;
-    background: rgba(0,0,0,.06); border-radius: 999px; padding: calc(1px * var(--u)) calc(6px * var(--u)); white-space: nowrap; opacity: .85;
+    font-weight: 700; font-size: 9.5px; letter-spacing: -.02em; flex-shrink: 0;
+    background: rgba(0,0,0,.06); border-radius: 999px; padding: 1px 6px; white-space: nowrap; opacity: .85;
   }
   .line-badge.line-up.clickable { cursor: pointer; }
   .line-badge.line-up.clickable:hover { filter: brightness(1.08); }
@@ -365,6 +358,8 @@
   @media (max-width: 620px) {
     header.topbar { padding: 12px 14px; }
     main { padding: 14px 12px 10px; }
+    .company-list { overflow-y: auto; }
+    .company-tile { flex-basis: 130px; }
   }
 </style>
 </head>
@@ -477,6 +472,16 @@
       <textarea id="incReason" placeholder="مثلاً: قطع ارتباط با سرور فناوران از ساعت..."></textarea>
     </div>
 
+    <div class="field" id="editRemoveWrap" style="display:none;">
+      <label>رشته‌هایی که از این قطعی عمومی وصل شده‌اند (اختیاری)</label>
+      <div id="editRemoveLines"></div>
+      <div class="sub" style="margin:6px 0 8px;">برای هر رشته‌ی انتخاب‌شده یک ردیف جدا با ساعت قطع (همین قطعی) و ساعت وصلی ثبت می‌شود؛ قطعی عمومی هم به قطعی‌های جدای هر رشته‌ی باقی‌مانده (با همان ساعت شروع) تبدیل می‌شود.</div>
+      <label>تاریخ وصلی رشته</label>
+      <div id="editRemoveDate" style="width:100%;"></div>
+      <label style="margin-top:8px;display:block;">ساعت وصلی رشته</label>
+      <div id="editRemoveTime" style="width:100%;"></div>
+    </div>
+
     <div class="warn-box" id="incWarnBox" style="display:none;"></div>
 
     <div class="modal-actions">
@@ -542,8 +547,8 @@ function faDateParts(date) {
 }
 
 function logToSheet(payload) {
-  if (!isSheetConfigured()) return;
-  fetch(SHEET_WEBHOOK_URL, {
+  if (!isSheetConfigured()) return Promise.resolve();
+  return fetch(SHEET_WEBHOOK_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify(payload)
@@ -905,6 +910,8 @@ function initJalaliDate(el) {
 initTime24(document.getElementById('incTime'));
 initJalaliDate(document.getElementById('incDate'));
 initTime24(document.getElementById('resolveTime'));
+initTime24(document.getElementById('editRemoveTime'));
+initJalaliDate(document.getElementById('editRemoveDate'));
 initJalaliDate(document.getElementById('resolveDate'));
 
 function fmtDateTime(iso) {
@@ -1212,81 +1219,7 @@ function renderCompanyList() {
       '<div class="tile-status">' + lineBadgesHtml + generalChipsHtml + inactiveHtml + '</div>';
     list.appendChild(card);
   });
-  layoutTiles();
 }
-
-/* ==========================================================
-   LAYOUT: جاسازی همهٔ کارت‌ها در صفحه بدون اسکرول
-   بهترین تعداد ستون/ردیف را طوری انتخاب می‌کنیم که کارت‌ها بزرگ‌ترین اندازهٔ ممکن
-   را داشته باشند، و ضریب مقیاس (--u) را برای فونت/دکمه‌ها/بج‌ها تنظیم می‌کنیم.
-========================================================== */
-const TILE_BASE_W = 190, TILE_BASE_H = 165;   // اندازهٔ مرجع طراحی (u = 1)
-const TILE_ASPECT = 1.15;                      // نسبت عرض به ارتفاعِ مطلوب
-const TILE_MAX_W = 560, TILE_MAX_H = 520;      // سقف اندازه وقتی تعداد شرکت‌ها کم است
-const TILE_MIN_U = 0.5, TILE_MAX_U = 2;
-
-function layoutTiles() {
-  const list = document.getElementById('companyList');
-  if (!list) return;
-  const n = list.querySelectorAll('.company-tile').length;
-  if (!n) return;
-
-  const W = list.clientWidth, H = list.clientHeight;
-  if (W < 40 || H < 40) return;
-
-  const narrow = W < 620;
-  const gap = narrow ? 6 : 10;
-
-  let best = null;
-  for (let cols = 1; cols <= n; cols++) {
-    const rows = Math.ceil(n / cols);
-    const tw = (W - gap * (cols - 1)) / cols;
-    const th = (H - gap * (rows - 1)) / rows;
-    if (tw <= 0 || th <= 0) continue;
-    const size = Math.min(tw / TILE_ASPECT, th);   // «اندازهٔ مؤثر» کارت
-    const empty = cols * rows - n;                 // خانه‌های خالیِ ردیف آخر
-    if (!best || size > best.size + 0.5 || (Math.abs(size - best.size) <= 0.5 && empty < best.empty)) {
-      best = { cols, rows, tw, th, size, empty };
-    }
-  }
-  if (!best) return;
-
-  const tw = Math.floor(Math.min(best.tw, TILE_MAX_W));
-  const th = Math.floor(Math.min(best.th, TILE_MAX_H));
-  const u = Math.max(TILE_MIN_U, Math.min(TILE_MAX_U, Math.min(tw / TILE_BASE_W, th / TILE_BASE_H)));
-
-  list.style.setProperty('--tw', tw + 'px');
-  list.style.setProperty('--th', th + 'px');
-  list.style.setProperty('--gap', gap + 'px');
-  list.style.setProperty('--u', u.toFixed(3));
-
-  fitTileContent(list, u);
-}
-
-/* اگر محتوای یک کارت (مثلاً چند قطعی همزمان) از ارتفاعش بیشتر شد، فقط همان کارت
-   کمی کوچک‌تر می‌شود تا هیچ قطعی‌ای بریده/پنهان نماند. */
-const TILE_FIT_MIN_U = 0.42;
-function fitTileContent(list, baseU) {
-  list.querySelectorAll('.company-tile').forEach(tile => {
-    const st = tile.querySelector('.tile-status');
-    if (!st) return;
-    let u = baseU, guard = 0;
-    while (st.scrollHeight > st.clientHeight + 1 && u > TILE_FIT_MIN_U && guard++ < 16) {
-      u = Math.max(TILE_FIT_MIN_U, u * 0.93);
-      tile.style.setProperty('--u', u.toFixed(3));
-    }
-  });
-}
-
-(function initTileLayout() {
-  const list = document.getElementById('companyList');
-  let raf = 0;
-  const schedule = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(layoutTiles); };
-  window.addEventListener('resize', schedule);
-  window.addEventListener('orientationchange', schedule);
-  if ('ResizeObserver' in window && list) new ResizeObserver(schedule).observe(list);
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(schedule);
-})();
 
 function editButtonHtml(inc) {
   if (!isOperator() || inc.is_nationwide) return '';
@@ -1413,8 +1346,34 @@ function openIncidentModal(preselectCompanyId, preselectLineKey) {
   document.getElementById('incDate').value = ymdOf(new Date());
   document.getElementById('incTime').value = nowTimeHHMM();
   pendingIncidentPayload = null;
+  setupEditRemoveBlock(null);
   fillIncidentModalSelectors(preselectCompanyId, preselectLineKey);
   document.getElementById('incidentModal').classList.add('open');
+}
+
+
+function setupEditRemoveBlock(inc) {
+  const wrap = document.getElementById('editRemoveWrap');
+  const show = !!inc && !inc.line && !inc.is_nationwide && !isNoticeIncident(inc);
+  wrap.style.display = show ? 'block' : 'none';
+  const box = document.getElementById('editRemoveLines');
+  box.innerHTML = show ? INSURANCE_LINES.filter(l => !l.customDetail).map(l =>
+    '<label class="checkbox-row"><input type="checkbox" class="edit-remove-line" value="' + l.key + '"> ' + l.label + ' وصل شده</label>'
+  ).join('') : '';
+  if (show) {
+    const now = new Date();
+    document.getElementById('editRemoveDate').value = ymdOf(now);
+    document.getElementById('editRemoveTime').value = hhmmOf(now);
+  }
+}
+function readEditRemoveDateTime() {
+  const dv = document.getElementById('editRemoveDate').value;
+  const tv = document.getElementById('editRemoveTime').value;
+  if (!dv || !tv) return null;
+  const [y, m, d] = dv.split('-').map(Number);
+  const [hh, mm] = tv.split(':').map(Number);
+  const dt = new Date(y, m - 1, d, hh, mm, 0, 0);
+  return isNaN(dt.getTime()) ? null : dt;
 }
 
 function openEditModal(id) {
@@ -1454,6 +1413,7 @@ function openEditModal(id) {
   document.getElementById('incDate').value = ymdOf(d);
   document.getElementById('incTime').value = hhmmOf(d);
   document.getElementById('incReason').value = inc.reason || '';
+  setupEditRemoveBlock(inc);
   document.getElementById('incidentModal').classList.add('open');
 }
 
@@ -1632,10 +1592,19 @@ async function submitEdit(force) {
   const openedAt = buildOpenedAt(document.getElementById('incTime').value, document.getElementById('incDate').value);
   if (openedAt.getTime() > Date.now() + 60000) { fail('⚠️ زمان شروع قطعی نمی‌تونه توی آینده باشه.'); return; }
 
+  const removedKeys = [...document.querySelectorAll('.edit-remove-line:checked')].map(x => x.value);
+  let removeAt = null;
+  if (removedKeys.length) {
+    removeAt = readEditRemoveDateTime();
+    if (!removeAt) { fail('⚠️ تاریخ و ساعت وصلی رشته رو کامل وارد کن.'); return; }
+    if (removeAt.getTime() > Date.now() + 60000) { fail('⚠️ زمان وصلی نمی‌تونه توی آینده باشه.'); return; }
+    if (removeAt < openedAt) { fail('⚠️ زمان وصلی رشته نمی‌تونه قبل از شروع قطعی باشه.'); return; }
+  }
+
   const sameMinute = (a, b) => Math.floor(new Date(a).getTime() / 60000) === Math.floor(new Date(b).getTime() / 60000);
   const unchanged = newTitle === inc.title && lineKey === (inc.line || null) && (lineDetail || null) === (inc.line_detail || null) &&
     (reason || '') === (inc.reason || '') && sameMinute(openedAt, inc.opened_at);
-  if (unchanged) { closeModal('incidentModal'); return; }
+  if (unchanged && !removedKeys.length) { closeModal('incidentModal'); return; }
 
   if (!force) {
     const dup = allOpenFor(inc.company_id).find(i => String(i.id) !== String(inc.id) && i.title === newTitle &&
@@ -1650,13 +1619,78 @@ async function submitEdit(force) {
   const submitBtn = document.getElementById('incSubmitBtn');
   submitBtn.disabled = true;
   try {
-    await updateIncidentRow(inc.id, {
-      title: newTitle,
-      line: lineKey,
-      line_detail: lineDetail,
-      reason: reason || null,
-      opened_at: openedAt.toISOString()
-    });
+    const remainingLines = removedKeys.length ? INSURANCE_LINES.filter(l => !removedKeys.includes(l.key)) : [];
+    if (!unchanged || removedKeys.length) {
+      await updateIncidentRow(inc.id, {
+        title: newTitle,
+        line: removedKeys.length ? remainingLines[0].key : lineKey,
+        line_detail: removedKeys.length ? null : lineDetail,
+        reason: reason || null,
+        opened_at: openedAt.toISOString()
+      });
+    }
+    // قطعی عمومی → قطعی‌های جدا برای بقیه‌ی رشته‌ها (با همان ساعت شروع)
+    for (const l of remainingLines.slice(1)) {
+      const row = await createIncidentRow({
+        company_id: inc.company_id,
+        title: newTitle,
+        line: l.key,
+        line_detail: null,
+        is_nationwide: false,
+        batch_id: null,
+        reason: reason || null,
+        opened_at: openedAt.toISOString(),
+        opened_by: inc.opened_by || (session && session.user ? session.user.email : 'نامشخص'),
+        status: 'open'
+      });
+      if (row && row.id !== undefined) {
+        await logToSheet({
+          action: 'open',
+          id: row.id,
+          company: company ? sheetCompanyName(company) : '',
+          tag: newTitle,
+          reason: reason || '',
+          line: l.label,
+          time: hhmmOf(openedAt),
+          ...faDateParts(openedAt)
+        });
+      }
+    }
+    // رشته‌های وصل‌شده از قطعی عمومی: برای هر کدوم یه ردیف جدا با ساعت قطع و وصلی
+    if (removedKeys.length) {
+      const closedBy = session && session.user ? session.user.email : 'نامشخص';
+      for (const key of removedKeys) {
+        const l = INSURANCE_LINES.find(x => x.key === key);
+        const row = await createIncidentRow({
+          company_id: inc.company_id,
+          title: newTitle,
+          line: key,
+          line_detail: null,
+          is_nationwide: false,
+          batch_id: null,
+          reason: reason || null,
+          opened_at: openedAt.toISOString(),
+          opened_by: inc.opened_by || closedBy,
+          status: 'closed',
+          closed_at: removeAt.toISOString(),
+          closed_by: closedBy
+        });
+        const rowId = row && row.id !== undefined ? row.id : null;
+        if (rowId !== null) {
+          await logToSheet({
+            action: 'open',
+            id: rowId,
+            company: company ? sheetCompanyName(company) : '',
+            tag: newTitle,
+            reason: reason || '',
+            line: l ? l.label : key,
+            time: hhmmOf(openedAt),
+            ...faDateParts(openedAt)
+          });
+          await logToSheet({ action: 'resolve', id: rowId, time: hhmmOf(removeAt), ...faDateParts(removeAt) });
+        }
+      }
+    }
     const wasNotice = isNoticeIncident(inc);
     const sheetPayload = {
       id: inc.id,
@@ -1750,7 +1784,15 @@ document.getElementById('newIncidentBtn').addEventListener('click', () => openIn
 
 document.getElementById('incTitle').addEventListener('change', updateNationwideVisibility);
 document.getElementById('incNationwide').addEventListener('change', updateCompanyFieldVisibility);
-document.getElementById('incLine').addEventListener('change', updateLineDetailVisibility);
+document.getElementById('incLine').addEventListener('change', () => {
+  updateLineDetailVisibility();
+  const inc = editingIncidentId !== null ? incidents.find(i => String(i.id) === String(editingIncidentId)) : null;
+  if (inc && !inc.line) {
+    const generalSelected = !document.getElementById('incLine').value;
+    document.getElementById('editRemoveWrap').style.display = generalSelected ? 'block' : 'none';
+    if (!generalSelected) document.querySelectorAll('.edit-remove-line').forEach(x => { x.checked = false; });
+  }
+});
 
 document.getElementById('incSubmitBtn').addEventListener('click', () => {
   if (editingIncidentId !== null) submitEdit(!!pendingIncidentPayload);

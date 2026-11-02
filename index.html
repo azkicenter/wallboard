@@ -576,17 +576,17 @@ function logToSheet(payload) {
 }
 
 const OUTAGE_TYPES = [
-  { key: 'sandogh',        label: 'مشکل صندوق',           nationwide: false, dynamicPortal: false },
-  { key: 'sabt_ahval',     label: 'ثبت احوال',             nationwide: false, dynamicPortal: false },
-  { key: 'amlak',          label: 'املاک و اسکان',         nationwide: true,  dynamicPortal: false },
-  { key: 'bimeh_markazi',  label: 'استعلام بیمه مرکزی',    nationwide: true,  dynamicPortal: false },
-  { key: 'fanavaran_portal', label: 'فناوران/پرتال قطع',   nationwide: false, dynamicPortal: true, dynamicWord: 'قطع' },
-  { key: 'fanavaran_portal_disruption', label: 'اختلال فناوران/پرتال', nationwide: false, dynamicPortal: true, dynamicWord: 'اختلال' },
-  { key: 'vpn',            label: 'مشکل وی‌پی‌ان',         nationwide: false, dynamicPortal: false },
-  { key: 'chap',           label: 'مشکل چاپ',              nationwide: false, dynamicPortal: false },
-  { key: 'mali',           label: 'ارسال به مالی',         nationwide: true,  dynamicPortal: false },
-  { key: 'shahkar',        label: 'شاهکار',                nationwide: false, dynamicPortal: false },
-  { key: 'ekhtelaf_nerkh', label: 'اختلاف نرخ',            nationwide: false, dynamicPortal: false, noticeOnly: true },
+  { key: 'sandogh',        label: 'مشکل صندوق',           group: 'قطعی', nationwide: false, dynamicPortal: false },
+  { key: 'sabt_ahval',     label: 'ثبت احوال',             group: 'قطعی', nationwide: false, dynamicPortal: false },
+  { key: 'amlak',          label: 'املاک و اسکان',         group: 'قطعی', nationwide: true,  dynamicPortal: false },
+  { key: 'bimeh_markazi',  label: 'استعلام بیمه مرکزی',    group: 'قطعی', nationwide: true,  dynamicPortal: false },
+  { key: 'fanavaran_portal', label: 'فناوران/پرتال قطع',   group: 'قطعی', shortLabel: 'فناوران/پرتال', nationwide: false, dynamicPortal: true, dynamicWord: 'قطع' },
+  { key: 'fanavaran_portal_disruption', label: 'اختلال فناوران/پرتال', group: 'اختلال', shortLabel: 'فناوران/پرتال', soft: true, nationwide: false, dynamicPortal: true, dynamicWord: 'اختلال' },
+  { key: 'vpn',            label: 'مشکل وی‌پی‌ان',         group: 'قطعی', nationwide: false, dynamicPortal: false },
+  { key: 'chap',           label: 'مشکل چاپ',              group: 'قطعی', nationwide: false, dynamicPortal: false },
+  { key: 'mali',           label: 'ارسال به مالی',         group: 'قطعی', nationwide: true,  dynamicPortal: false },
+  { key: 'shahkar',        label: 'شاهکار',                group: 'قطعی', nationwide: false, dynamicPortal: false },
+  { key: 'ekhtelaf_nerkh', label: 'اختلاف نرخ',            group: 'قطعی', nationwide: false, dynamicPortal: false, noticeOnly: true },
   { key: 'ekhtelal_mali',  label: 'اختلال ارسال به مالی',  group: 'اختلال', shortLabel: 'ارسال به مالی',  soft: true, nationwide: true, dynamicPortal: false },
   { key: 'ekhtelal_amlak', label: 'اختلال املاک و اسکان',  group: 'اختلال', shortLabel: 'املاک و اسکان',  soft: true, nationwide: true, dynamicPortal: false },
   { key: 'ekhtelal_bimeh_markazi', label: 'اختلال استعلام بیمه مرکزی', group: 'اختلال', shortLabel: 'استعلام بیمه مرکزی', soft: true, nationwide: true, dynamicPortal: false },
@@ -594,7 +594,9 @@ const OUTAGE_TYPES = [
 ];
 
 const NOTICE_ONLY_TITLES = OUTAGE_TYPES.filter(t => t.noticeOnly).map(t => t.label);
-const SOFT_TITLES = OUTAGE_TYPES.filter(t => t.soft).map(t => t.label);
+const SOFT_TITLES = OUTAGE_TYPES.filter(t => t.soft).flatMap(t => t.dynamicPortal
+  ? [t.label, 'فناوران ' + (t.dynamicWord || 'قطع'), 'پرتال ' + (t.dynamicWord || 'قطع')]
+  : [t.label]);
 function isSoftIncident(i) { return !!i && SOFT_TITLES.includes(i.title); }
 function isNoticeIncident(i) { return !!i && NOTICE_ONLY_TITLES.includes(i.title); }
 
@@ -1412,8 +1414,8 @@ function fillIncidentModalSelectors(preselectCompanyId, preselectLineKey) {
   if (preselectCompanyId) compSel.value = preselectCompanyId;
 
   const titleSel = document.getElementById('incTitle');
-  const titleOpt = t => '<option value="' + t.key + '">' + (t.group ? t.shortLabel : t.label) + '</option>';
-  let titleHtml = OUTAGE_TYPES.filter(t => !t.group).map(titleOpt).join('');
+  const titleOpt = t => '<option value="' + t.key + '">' + (t.shortLabel || t.label) + '</option>';
+  let titleHtml = OUTAGE_TYPES.filter(t => !t.group).map(titleOpt).join('');   // (الان همه گروه دارن)
   [...new Set(OUTAGE_TYPES.filter(t => t.group).map(t => t.group))].forEach(g => {
     titleHtml += '<optgroup label="' + g + '">' + OUTAGE_TYPES.filter(t => t.group === g).map(titleOpt).join('') + '</optgroup>';
   });

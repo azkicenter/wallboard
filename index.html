@@ -1369,7 +1369,7 @@ function renderLineBadgeHtml(company, line) {
     : line.label;
   const tagTitles = [...new Set(incList.map(i => i.title).filter(Boolean))].join('، ');
   const tooltip = incList.map(i =>
-    '[' + (i.title || '—') + '] ' + (i.reason ? i.reason : 'بدون توضیح') + ' — از ' + fmtDateTime(i.opened_at) + ' (' + fmtDuration(i.opened_at) + ') — ثبت: ' + (i.opened_by || '—')
+    '[' + (i.title || '—') + '] ' + (i.reason ? i.reason + ' — ' : '') + 'از ' + fmtDateTime(i.opened_at) + ' (' + fmtDuration(i.opened_at) + ')'
   ).join(' | ');
   const resolveButtonsHtml = isOperator()
     ? incList.map(i => editButtonHtml(i) + '<button class="chip-resolve line-report-btn" data-resolve-incident="' + i.id + '" title="ثبت وصلی' + (i.line_detail ? ' برای ' + escapeHtml(i.line_detail) : '') + '">✓</button>').join('')
@@ -1390,7 +1390,7 @@ function renderIncidentChipHtml(inc, company) {
   const typeObj = OUTAGE_TYPES.find(t => t.label === inc.title ||
     (t.dynamicPortal && inc.title === typeLabelForCompany(t, company)));
   const label = typeObj ? typeLabelForCompany(typeObj, company) : inc.title;
-  const tooltip = (inc.reason ? inc.reason : 'بدون توضیح') + ' — از ' + fmtDateTime(inc.opened_at) + ' (' + fmtDuration(inc.opened_at) + ') — ثبت: ' + (inc.opened_by || '—');
+  const tooltip = (inc.reason ? inc.reason + ' — ' : '') + 'از ' + fmtDateTime(inc.opened_at) + ' (' + fmtDuration(inc.opened_at) + ')';
   return '<span class="incident-chip' + (isSoftIncident(inc) ? ' warn' : '') + '" title="' + escapeHtml(tooltip) + '">' +
     '<span class="chip-label">' + escapeHtml(label) + '</span>' +
     '<span class="chip-timer">⏱ ' + fmtTimer(inc.opened_at) + '</span>' +

@@ -1252,8 +1252,14 @@ function renderCompanyList() {
         '</button>'
       : '';
 
-    const lineBadgesHtml = active ? INSURANCE_LINES.map(line => renderLineBadgeHtml(company, line)).join('') : '';
-    const generalChipsHtml = active ? generalOpenIncidentsFor(company.id).map(inc => renderIncidentChipHtml(inc, company)).join('') : '';
+    // قطعی عمومی (رشته انتخاب نشده) = همه‌ی رشته‌های فعال قطع؛ مثل قطعی تک‌رشته روی هر رشته نمایش داده می‌شه
+    const generalAll = active ? generalOpenIncidentsFor(company.id) : [];
+    const hasActiveLine = INSURANCE_LINES.some(l => isLineActive(company, l.key));
+    const spreadToLines = hasActiveLine
+      ? generalAll.filter(inc => isSoftIncident(inc) || isRedIncidentFor(company, inc))
+      : [];
+    const lineBadgesHtml = active ? INSURANCE_LINES.map(line => renderLineBadgeHtml(company, line, spreadToLines)).join('') : '';
+    const generalChipsHtml = generalAll.filter(inc => !spreadToLines.includes(inc)).map(inc => renderIncidentChipHtml(inc, company)).join('');
     const inactiveHtml = active ? '' : '<span class="tile-inactive-label">غیرفعال</span>';
     const nameHtml = logo ? '' : '<span class="tile-name">' + escapeHtml(company.name) + '</span>';
 
@@ -1348,14 +1354,15 @@ function editButtonHtml(inc) {
   return '<button class="chip-edit" data-edit-incident="' + inc.id + '" title="ویرایش قطعی">✎</button>';
 }
 
-function renderLineBadgeHtml(company, line) {
+function renderLineBadgeHtml(company, line, generalIncs) {
   if (!isLineActive(company, line.key)) {
     return '<span class="line-badge line-inactive" title="رشته‌ی ' + escapeHtml(line.label) + ' غیرفعال است">' +
       '<span class="line-name">' + escapeHtml(line.label) + ' ● غیرفعال</span>' +
       linePowerBtnHtml(company, line, false) +
       '</span>';
   }
-  const incList = openLineIncidentsFor(company.id, line.key);
+  // قطعی‌های عمومی (بدون رشته) هم روی تک‌تک رشته‌ها نشون داده می‌شن → همه‌ی رشته‌ها «قطع»
+  const incList = openLineIncidentsFor(company.id, line.key).concat(generalIncs || []);
   if (incList.length === 0) {
     const clickableAttr = isOperator()
       ? ' data-quick-incident-line="' + company.id + '|' + line.key + '" title="ثبت قطعی برای رشته‌ی ' + escapeHtml(line.label) + '"'

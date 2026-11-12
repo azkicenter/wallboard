@@ -273,6 +273,7 @@
     font-weight: 700; font-size: 9.5px; letter-spacing: -.02em; flex-shrink: 0;
     background: rgba(0,0,0,.06); border-radius: 999px; padding: 1px 6px; white-space: nowrap; opacity: .85;
   }
+  .resolve-all-lines-btn { font-size: 11px; padding: 3px 10px; white-space: nowrap; }
   .chip-resolve {
     background: var(--success); color: #fff; border: none; border-radius: 50%;
     width: 21px; height: 21px; font-size: 12.5px; cursor: pointer; flex-shrink: 0;
@@ -1272,6 +1273,9 @@ function renderCompanyList() {
       ? generalAll.filter(inc => isSoftIncident(inc) || isRedIncidentFor(company, inc))
       : [];
     const lineBadgesHtml = active ? INSURANCE_LINES.map(line => renderLineBadgeHtml(company, line, spreadToLines)).join('') : '';
+    const resolveAllLinesHtml = isOperator()
+      ? spreadToLines.map(inc => '<button class="btn btn-success btn-sm resolve-all-lines-btn" data-resolve-incident="' + inc.id + '" title="ثبت وصلی ' + escapeHtml(inc.title || '') + ' برای همه‌ی رشته‌ها">ثبت وصلی برای همه رشته‌ها' + (spreadToLines.length > 1 ? ' (' + escapeHtml(inc.title || '') + ')' : '') + '</button>').join('')
+      : '';
     const generalChipsHtml = generalAll.filter(inc => !spreadToLines.includes(inc)).map(inc => renderIncidentChipHtml(inc, company)).join('');
     const inactiveHtml = active ? '' : '<span class="tile-inactive-label">غیرفعال</span>';
     const nameHtml = logo ? '' : '<span class="tile-name">' + escapeHtml(company.name) + '</span>';
@@ -1285,7 +1289,7 @@ function renderCompanyList() {
       quickBtnHtml +
       '<div class="tile-logo-wrap">' + logoHtml + '</div>' +
       nameHtml +
-      '<div class="tile-status">' + lineBadgesHtml + generalChipsHtml + inactiveHtml + '</div>';
+      '<div class="tile-status">' + lineBadgesHtml + resolveAllLinesHtml + generalChipsHtml + inactiveHtml + '</div>';
     list.appendChild(card);
   });
   layoutTiles();
@@ -1393,7 +1397,9 @@ function renderLineBadgeHtml(company, line, generalIncs) {
     '[' + (i.title || '—') + '] ' + (i.reason ? i.reason + ' — ' : '') + 'از ' + fmtDateTime(i.opened_at) + ' (' + fmtDuration(i.opened_at) + ')'
   ).join(' | ');
   const resolveButtonsHtml = isOperator()
-    ? incList.map(i => editButtonHtml(i) + '<button class="chip-resolve line-report-btn" data-resolve-incident="' + i.id + '" title="ثبت وصلی' + (i.line_detail ? ' برای ' + escapeHtml(i.line_detail) : '') + '">✓</button>').join('')
+    ? incList.map(i => editButtonHtml(i) + (!i.line
+        ? '<button class="chip-resolve line-report-btn" data-resolve-line="' + i.id + '|' + line.key + '" title="ثبت وصلی فقط برای ' + escapeHtml(line.label) + '">✓</button>'
+        : '<button class="chip-resolve line-report-btn" data-resolve-incident="' + i.id + '" title="ثبت وصلی' + (i.line_detail ? ' برای ' + escapeHtml(i.line_detail) : '') + '">✓</button>')).join('')
     : '';
   const oldestOpenedAt = incList.map(i => i.opened_at).filter(Boolean).sort()[0];
   const timerHtml = oldestOpenedAt ? '<span class="chip-timer">⏱ ' + fmtTimer(oldestOpenedAt) + '</span>' : '';
@@ -1878,6 +1884,44 @@ async function resolveIncident(id, closedAt) {
   await refreshAll();
 }
 
+/* وصلیِ فقط یک رشته از قطعیِ «همه رشته‌ها»:
+   همان رشته → ردیف جدا با ساعت قطع و وصلی؛ بقیه‌ی رشته‌های فعال → ردیف باز جدا با همان ساعت شروع */
+async function resolveSingleLine(id, lineKey, closedAt) {
+  const inc = incidents.find(i => String(i.id) === String(id));
+  if (!inc) throw new Error('این قطعی دیگه باز نیست.');
+  const company = companies.find(c => String(c.id) === String(inc.company_id));
+  const resolvedLine = INSURANCE_LINES.find(l => l.key === lineKey);
+  const remaining = INSURANCE_LINES.filter(l => l.key !== lineKey && (!company || isLineActive(company, l.key)));
+  if (!remaining.length) { await resolveIncident(id, closedAt); return; }
+  const closedBy = session && session.user ? session.user.email : 'نامشخص';
+  const openedAt = new Date(inc.opened_at);
+  const base = {
+    company_id: inc.company_id, title: inc.title, line_detail: null,
+    is_nationwide: !!inc.is_nationwide, batch_id: inc.batch_id || null,
+    reason: inc.reason || null, opened_at: inc.opened_at,
+    opened_by: inc.opened_by || closedBy
+  };
+  const cname = company ? sheetCompanyName(company) : '';
+  // ۱) ردیف اصلی می‌مونه و به اولین رشته‌ی باقی‌مانده اختصاص پیدا می‌کنه
+  await updateIncidentRow(inc.id, { line: remaining[0].key, line_detail: null });
+  // ۲) رشته‌های باقی‌مانده‌ی دیگه → ردیف باز جدا
+  for (const l of remaining.slice(1)) {
+    const row = await createIncidentRow(Object.assign({}, base, { line: l.key, status: 'open' }));
+    if (row && row.id !== undefined) {
+      await logToSheet({ action: 'open', id: row.id, company: cname, tag: inc.title, reason: inc.reason || '', line: l.label, time: hhmmOf(openedAt), ...faDateParts(openedAt) });
+    }
+  }
+  // ۳) رشته‌ی وصل‌شده → ردیف بسته با ساعت قطع و وصلی
+  const row = await createIncidentRow(Object.assign({}, base, {
+    line: lineKey, status: 'closed', closed_at: closedAt.toISOString(), closed_by: closedBy
+  }));
+  if (row && row.id !== undefined) {
+    await logToSheet({ action: 'open', id: row.id, company: cname, tag: inc.title, reason: inc.reason || '', line: resolvedLine ? resolvedLine.label : lineKey, time: hhmmOf(openedAt), ...faDateParts(openedAt) });
+    await logToSheet({ action: 'resolve', id: row.id, time: hhmmOf(closedAt), ...faDateParts(closedAt) });
+  }
+  await refreshAll();
+}
+
 async function resolveAllForTitle(title, closedAt) {
   closedAt = closedAt || new Date();
   const closedBy = session && session.user ? session.user.email : 'نامشخص';
@@ -1953,6 +1997,7 @@ document.getElementById('incSubmitBtn').addEventListener('click', () => {
 
 let resolvingIncidentId = null;
 let resolvingAllTitle = null;
+let resolvingLine = null;   // { id, key } → وصلیِ فقط یک رشته از قطعیِ «همه رشته‌ها»
 document.getElementById('resolveDate').addEventListener('input', updateResolveDateFa);
 document.getElementById('resolveSubmitBtn').addEventListener('click', async () => {
   const warn = document.getElementById('resolveWarnBox');
@@ -1967,7 +2012,9 @@ document.getElementById('resolveSubmitBtn').addEventListener('click', async () =
     warn.style.display = 'block';
     return;
   }
-  const targets = resolvingIncidentId
+  const targets = resolvingLine
+    ? incidents.filter(i => String(i.id) === String(resolvingLine.id))
+    : resolvingIncidentId
     ? incidents.filter(i => String(i.id) === String(resolvingIncidentId))
     : incidents.filter(i => i.status === 'open' && i.title === resolvingAllTitle && i.is_nationwide);
   if (targets.some(i => i.opened_at && closedAt < new Date(i.opened_at))) {
@@ -1976,9 +2023,21 @@ document.getElementById('resolveSubmitBtn').addEventListener('click', async () =
     return;
   }
   warn.style.display = 'none';
-  if (resolvingIncidentId) await resolveIncident(resolvingIncidentId, closedAt);
-  if (resolvingAllTitle) await resolveAllForTitle(resolvingAllTitle, closedAt);
-  resolvingIncidentId = null; resolvingAllTitle = null;
+  const submitBtn = document.getElementById('resolveSubmitBtn');
+  submitBtn.disabled = true;
+  try {
+    if (resolvingLine) await resolveSingleLine(resolvingLine.id, resolvingLine.key, closedAt);
+    else if (resolvingIncidentId) await resolveIncident(resolvingIncidentId, closedAt);
+    else if (resolvingAllTitle) await resolveAllForTitle(resolvingAllTitle, closedAt);
+  } catch (err) {
+    console.error(err);
+    warn.textContent = '❌ ثبت وصلی با خطا مواجه شد: ' + (err && (err.message || err.details || err.hint) || err);
+    warn.style.display = 'block';
+    submitBtn.disabled = false;
+    return;
+  }
+  submitBtn.disabled = false;
+  resolvingIncidentId = null; resolvingAllTitle = null; resolvingLine = null;
   closeModal('resolveModal');
 });
 
@@ -2048,10 +2107,22 @@ document.addEventListener('click', async (e) => {
     return;
   }
 
+  const resolveLineBtn = e.target.closest('[data-resolve-line]');
+  if (resolveLineBtn) {
+    const [iid, lk] = resolveLineBtn.getAttribute('data-resolve-line').split('|');
+    const l = INSURANCE_LINES.find(x => x.key === lk);
+    resolvingLine = { id: iid, key: lk };
+    resolvingIncidentId = null; resolvingAllTitle = null;
+    document.getElementById('resolveSub').textContent = 'وصلی فقط برای رشته‌ی «' + (l ? l.label : lk) + '» ثبت می‌شه؛ بقیه‌ی رشته‌ها همچنان قطع می‌مونن (برای هر کدوم ردیف جدا ساخته می‌شه).';
+    prepareResolveModal();
+    document.getElementById('resolveModal').classList.add('open');
+    return;
+  }
+
   const resolveBtn = e.target.closest('[data-resolve-incident]');
   if (resolveBtn) {
     resolvingIncidentId = resolveBtn.getAttribute('data-resolve-incident');
-    resolvingAllTitle = null;
+    resolvingAllTitle = null; resolvingLine = null;
     document.getElementById('resolveSub').textContent = 'مطمئنی این قطعی به وضعیت متصل برمی‌گرده؟';
     prepareResolveModal();
     document.getElementById('resolveModal').classList.add('open');
@@ -2061,7 +2132,7 @@ document.addEventListener('click', async (e) => {
   const noticeBtn = e.target.closest('[data-resolve-notice]');
   if (noticeBtn) {
     resolvingIncidentId = noticeBtn.getAttribute('data-resolve-notice');
-    resolvingAllTitle = null;
+    resolvingAllTitle = null; resolvingLine = null;
     document.getElementById('resolveSub').textContent = 'مطمئنی این تگ برای شرکت برداشته بشه؟';
     prepareResolveModal(true);
     document.getElementById('resolveModal').classList.add('open');
@@ -2070,7 +2141,7 @@ document.addEventListener('click', async (e) => {
 
   const resolveAllBtn = e.target.closest('[data-resolve-all-title]');
   if (resolveAllBtn) {
-    resolvingAllTitle = resolveAllBtn.getAttribute('data-resolve-all-title');
+    resolvingAllTitle = resolveAllBtn.getAttribute('data-resolve-all-title'); resolvingLine = null;
     resolvingIncidentId = null;
     document.getElementById('resolveSub').textContent = 'وصلی برای همه‌ی شرکت‌های درگیر «' + resolvingAllTitle + '» ثبت می‌شه. ادامه بدیم؟';
     prepareResolveModal();

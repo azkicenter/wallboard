@@ -1732,6 +1732,7 @@ async function submitIncident(force) {
 }
 
 /* ویرایش قطعی بازِ موجود (بدون وصلی و ثبت مجدد) */
+const SHEET_COMPANY_LOG_ENABLED = false;  // وقتی Apps Script شیت اکشن 'company_active' (تب لاگ فعال‌سازی شرکت‌ها) رو پشتیبانی کرد true کن
 const SHEET_EDIT_ENABLED = false;  // وقتی Apps Script شیت اکشن 'edit' رو پشتیبانی کرد true کن
 
 async function submitEdit(force) {
@@ -2095,6 +2096,10 @@ document.addEventListener('click', async (e) => {
         }
       }
       await setCompanyActive(company.id, makeActive);
+      if (SHEET_COMPANY_LOG_ENABLED) {
+        const t = new Date();
+        logToSheet({ action: 'company_active', company: sheetCompanyName(company), active: makeActive, closed: openToClose.length, time: hhmmOf(t), ...faDateParts(t) });
+      }
       await refreshAll();
     } catch (err) {
       console.error('خطا در تغییر وضعیت شرکت:', err);

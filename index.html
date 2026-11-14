@@ -2081,9 +2081,19 @@ document.addEventListener('click', async (e) => {
     const company = companies.find(c => String(c.id) === String(id));
     if (!company) return;
     const makeActive = !isCompanyActive(company);
-    if (!makeActive && !confirm('شرکت «' + company.name + '» غیرفعال بشه؟')) return;
+    const openToClose = makeActive ? [] : incidents.filter(i => i.status === 'open' && String(i.company_id) === String(company.id));
+    if (!makeActive && !confirm('شرکت «' + company.name + '» غیرفعال بشه؟' +
+        (openToClose.length ? '\n\n' + openToClose.length + ' قطعی/تگ بازِ این شرکت همین الان وصل (بسته) می‌شه.' : ''))) return;
     powerBtn.disabled = true;
     try {
+      if (openToClose.length) {
+        const now = new Date();
+        const closedBy = session && session.user ? session.user.email : 'نامشخص';
+        for (const inc of openToClose) {
+          await closeIncidentRow(inc.id, closedBy, now);
+          if (!isNoticeIncident(inc)) logToSheet({ action: 'resolve', id: inc.id, time: hhmmOf(now), ...faDateParts(now) });
+        }
+      }
       await setCompanyActive(company.id, makeActive);
       await refreshAll();
     } catch (err) {

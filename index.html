@@ -1190,12 +1190,13 @@ function render() {
   renderCompanyList();
 }
 
-let viewerCount = 0;
+let viewerCount = null;   // تا وقتی Realtime وصل نشده null → «—» نشون داده می‌شه، نه عدد غلط ۰
 function renderViewers() {
   const chip = document.getElementById('viewersChip');
   if (!chip) return;
   chip.style.display = 'inline-flex';
-  document.getElementById('viewersCount').textContent = viewerCount;
+  document.getElementById('viewersCount').textContent = viewerCount === null ? '—' : viewerCount;
+  chip.title = viewerCount === null ? 'اتصال Realtime برقرار نیست؛ تعداد بینندگان در دسترس نیست' : 'تعداد بینندگان همین لحظه';
 }
 
 function renderTopbar() {
